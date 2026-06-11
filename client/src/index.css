@@ -1,0 +1,215 @@
+/* Modern variable font — crisp at every weight */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: 36 86 235;       /* brand-600 */
+    --color-primary-dark: 29 67 216;  /* brand-700 */
+    --color-accent: 245 158 11;       /* accent-500 */
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight text-slate-900;
+  }
+
+  /* Nicer default focus ring across the app */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand-500/40 ring-offset-1 ring-offset-white;
+  }
+}
+
+@layer components {
+  /* Card — soft, layered, modern */
+  .card {
+    @apply bg-white rounded-2xl border border-slate-200/70 shadow-card p-6;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply bg-white rounded-2xl border border-slate-200/70 shadow-card p-5 flex items-center gap-4;
+  }
+
+  /* Subtle gradient surface used for hero/branded panels */
+  .surface-brand {
+    @apply bg-gradient-to-br from-brand-600 via-brand-700 to-navy-900 text-white;
+  }
+
+  /* Table styles */
+  .data-table {
+    @apply w-full text-sm;
+  }
+  .data-table thead tr {
+    @apply bg-slate-50 border-b border-slate-200;
+  }
+  .data-table thead th {
+    @apply px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider;
+  }
+  .data-table tbody tr {
+    @apply border-b border-slate-100 hover:bg-slate-50/70 transition-colors;
+  }
+  .data-table tbody td {
+    @apply px-4 py-3 text-slate-700;
+  }
+
+  /* Form controls */
+  .form-input {
+    @apply w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl bg-white text-slate-900
+           focus:outline-none focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500
+           placeholder:text-slate-400 transition-all duration-150;
+  }
+  .form-select {
+    @apply form-input appearance-none cursor-pointer;
+  }
+  .form-label {
+    @apply block text-sm font-medium text-slate-700 mb-1.5;
+  }
+
+  /* Sidebar nav item — for the dark navy sidebar */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+           text-navy-200 hover:bg-white/10 hover:text-white transition-all duration-150 cursor-pointer;
+  }
+  .nav-item.active {
+    @apply bg-white/10 text-white shadow-sm;
+  }
+
+  /* Status badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 ring-inset;
+  }
+  .badge-green  { @apply bg-emerald-50 text-emerald-700 ring-emerald-600/20; }
+  .badge-yellow { @apply bg-amber-50 text-amber-700 ring-amber-600/20; }
+  .badge-red    { @apply bg-red-50 text-red-700 ring-red-600/20; }
+  .badge-blue   { @apply bg-brand-50 text-brand-700 ring-brand-600/20; }
+  .badge-purple { @apply bg-purple-50 text-purple-700 ring-purple-600/20; }
+  .badge-gray   { @apply bg-slate-100 text-slate-600 ring-slate-500/20; }
+  .badge-orange { @apply bg-orange-50 text-orange-700 ring-orange-600/20; }
+
+  /* Scrollbar */
+  .scrollbar-thin::-webkit-scrollbar { width: 5px; height: 5px; }
+  .scrollbar-thin::-webkit-scrollbar-track { @apply bg-transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-full; }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { @apply bg-slate-400; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .animate-fade-in { animation: fadeIn 0.2s ease-out; }
+  .animate-slide-up { animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+  .animate-scale-in { animation: scaleIn 0.18s cubic-bezier(0.16, 1, 0.3, 1); }
+
+  /* Gradient text — for headlines / brand accents */
+  .text-gradient-brand {
+    @apply bg-gradient-to-r from-brand-600 to-accent-500 bg-clip-text text-transparent;
+  }
+
+  /* Glassy header backdrop */
+  .glass {
+    @apply bg-white/80 backdrop-blur-xl;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Premium landing page animations */
+@keyframes floatBlob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(40px, -40px) scale(1.08); }
+  50%  { transform: translate(-20px, 30px) scale(0.94); }
+  75%  { transform: translate(30px, 20px) scale(1.04); }
+}
+
+@keyframes floatBlobSlow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(-50px, -20px) scale(1.06); }
+  66%  { transform: translate(20px, 40px) scale(0.96); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.25), 0 0 60px rgba(59, 130, 246, 0.08); }
+  50%      { box-shadow: 0 0 35px rgba(59, 130, 246, 0.45), 0 0 80px rgba(139, 92, 246, 0.15); }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(59, 130, 246, 0.15); }
+  50%      { border-color: rgba(139, 92, 246, 0.35); }
+}
+
+.animate-float-blob {
+  animation: floatBlob 18s ease-in-out infinite;
+}
+
+.animate-float-blob-slow {
+  animation: floatBlobSlow 22s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s ease-out forwards;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.animate-border-glow {
+  animation: borderGlow 4s ease-in-out infinite;
+}
+
+/* Kitchen display font */
+.kitchen-font {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}
+
+/* Print styles */
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+
+  /* Hide everything except the print target */
+  body > * { display: none !important; }
+  #print-root { display: block !important; }
+
+  body {
+    background: white !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 12px !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Thermal printer width — 80mm ≈ 302px at 96dpi */
+  @page {
+    size: 80mm auto;
+    margin: 4mm;
+  }
+}

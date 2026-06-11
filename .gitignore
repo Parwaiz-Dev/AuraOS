@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+.DS_Store
+.vscode/
+.idea/
+coverage/
+
+# Database backups — never commit DB dumps (contain tenant data)
+backups/
+.aider*
+
+# Client-side build artifacts and dependencies
+client/node_modules/
+client/dist/
+apps/waiter/node_modules/
+apps/waiter/dist/
