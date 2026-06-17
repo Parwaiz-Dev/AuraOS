@@ -14,6 +14,7 @@ import zomatoRoutes from '@/integrations/zomato/zomato.routes';
 import whatsappRoutes from '@/integrations/whatsapp/whatsapp.routes';
 import usersRoutes from '@/modules/users/users.routes';
 import publicRoutes from '@/modules/public/public.routes';
+import siteRoutes from '@/modules/public/site.routes';
 import paymentWebhookRoutes from '@/modules/payments/payments.webhook';
 import onboardingRoutes from '@/modules/onboarding/onboarding.routes';
 import adminRoutes from '@/modules/admin/admin.routes';
@@ -81,6 +82,7 @@ export function createApp(): Express {
   app.use('/api/v1/reports', reportsRoutes);
   app.use('/api/v1/users', usersRoutes);
   app.use('/api/v1/public', publicRoutes);   // No auth — customer-facing
+  app.use('/api/v1/public', siteRoutes);     // No auth — public website (branding/theme/hours/gallery/pages)
   app.use('/api/v1/webhooks/payments', paymentWebhookRoutes); // No auth — gateway webhooks
   app.use('/api/v1/onboarding', onboardingRoutes);  // No auth — new restaurant signup
   app.use('/api/v1/admin', adminRoutes);           // Mixed auth — public contact + super-admin management
