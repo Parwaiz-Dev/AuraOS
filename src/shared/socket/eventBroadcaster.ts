@@ -13,6 +13,9 @@ export enum SocketEvent {
   ORDER_CANCELLED = 'ORDER_CANCELLED',
   ORDER_DELAYED = 'ORDER_DELAYED',   // fired by background job when order exceeds threshold
 
+  // Reservation events
+  RESERVATION_CREATED = 'RESERVATION_CREATED',
+
   // Payment events
   PAYMENT_CREATED = 'PAYMENT_CREATED',
   PAYMENT_UPDATED = 'PAYMENT_UPDATED',
@@ -58,6 +61,12 @@ export interface PaymentEventPayload {
   order_id: string;
   status: string;
   amount: number;
+}
+
+export interface ReservationEventPayload {
+  reservation_id: string;
+  restaurant_id: string;
+  status: string;
 }
 
 export interface InventoryEventPayload {
@@ -138,6 +147,13 @@ export class EventBroadcaster {
    */
   broadcastOrderDelayed(payload: DelayedOrderPayload): void {
     this.io.to(`restaurant:${payload.restaurant_id}`).emit(SocketEvent.ORDER_DELAYED, payload);
+  }
+
+  /**
+   * Broadcast a new reservation to the restaurant room (owner dashboard).
+   */
+  broadcastReservationCreated(payload: ReservationEventPayload): void {
+    this.io.to(`restaurant:${payload.restaurant_id}`).emit(SocketEvent.RESERVATION_CREATED, payload);
   }
 
   /**

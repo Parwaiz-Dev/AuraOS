@@ -28,6 +28,23 @@ export default function CheckoutPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Delivery zone quote (by pincode).
+  const [pincode, setPincode] = useState('');
+  const [quote, setQuote] = useState<import('@/lib/client').DeliveryQuote | null>(null);
+  const [quoteBusy, setQuoteBusy] = useState(false);
+
+  async function checkPincode() {
+    if (pincode.length < 4) return;
+    setQuoteBusy(true); setError(null);
+    try {
+      const { getDeliveryQuote } = await import('@/lib/client');
+      setQuote(await getDeliveryQuote(slug, pincode));
+    } catch (e) { setError((e as Error).message); } finally { setQuoteBusy(false); }
+  }
+
+  const deliveryFee = quote?.deliverable ? quote.fee ?? 0 : 0;
+  const grandTotal = total + deliveryFee;
+
   // Skip login if already authenticated.
   useEffect(() => {
     if (getCustomerToken()) {
@@ -154,6 +171,28 @@ export default function CheckoutPage() {
             <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full rounded-lg border px-3 py-2" />
           </div>
           <div>
+            <label className="block text-sm font-medium">Delivery pincode</label>
+            <div className="mt-1 flex gap-2">
+              <input value={pincode} onChange={(e) => { setPincode(e.target.value.replace(/\D/g, '').slice(0, 6)); setQuote(null); }}
+                inputMode="numeric" placeholder="e.g. 560034" className="w-full rounded-lg border px-3 py-2" />
+              <button onClick={checkPincode} disabled={quoteBusy || pincode.length < 4}
+                className="whitespace-nowrap rounded-lg border px-4 text-sm font-medium disabled:opacity-50">
+                {quoteBusy ? '…' : 'Check'}
+              </button>
+            </div>
+            {quote ? (
+              quote.deliverable ? (
+                <p className="mt-2 text-sm text-green-700">
+                  Delivers to {quote.zone_name} · Fee ₹{(quote.fee ?? 0).toFixed(0)}
+                  {quote.eta_minutes ? ` · ~${quote.eta_minutes} min` : ''}
+                  {quote.min_order ? ` · Min order ₹${quote.min_order.toFixed(0)}` : ''}
+                </p>
+              ) : (
+                <p className="mt-2 text-sm text-red-700">Sorry, we don’t deliver to this pincode.</p>
+              )
+            ) : null}
+          </div>
+          <div>
             <label className="block text-sm font-medium">Notes (optional)</label>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="mt-1 w-full rounded-lg border px-3 py-2" />
           </div>
@@ -169,10 +208,16 @@ export default function CheckoutPage() {
               ))}
             </div>
           </div>
-          <button onClick={submitOrder} disabled={busy}
+          {deliveryFee > 0 ? (
+            <div className="flex justify-between border-t pt-3 text-sm">
+              <span>Items ₹{total.toFixed(0)} + Delivery ₹{deliveryFee.toFixed(0)}</span>
+              <span className="font-bold">₹{grandTotal.toFixed(0)}</span>
+            </div>
+          ) : null}
+          <button onClick={submitOrder} disabled={busy || (!!quote && !quote.deliverable)}
             className="w-full rounded-full px-6 py-3 font-semibold text-white disabled:opacity-50"
             style={{ backgroundColor: 'var(--brand-primary)' }}>
-            {busy ? 'Placing order…' : `Place Order · ₹${total.toFixed(0)}`}
+            {busy ? 'Placing order…' : `Place Order · ₹${grandTotal.toFixed(0)}`}
           </button>
           {payment === 'ONLINE' ? (
             <p className="text-center text-xs opacity-60">Online payment (Razorpay) completes on the next step.</p>

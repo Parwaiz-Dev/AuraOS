@@ -115,3 +115,31 @@ export function verifyPayment(payload: {
     body: JSON.stringify(payload),
   });
 }
+
+// ── Reservations ───────────────────────────────────────────────────────────────
+export function createReservation(slug: string, payload: {
+  customer_name: string;
+  customer_phone: string;
+  party_size: number;
+  reserved_for: string; // ISO
+  special_requests?: string;
+}) {
+  return req<{ id: string; status: string; reserved_for: string; party_size: number }>(
+    `/public/site/${encodeURIComponent(slug)}/reservations`,
+    { method: 'POST', auth: true, body: JSON.stringify(payload) },
+  );
+}
+
+// ── Delivery quote ─────────────────────────────────────────────────────────────
+export interface DeliveryQuote {
+  deliverable: boolean;
+  zone_name?: string;
+  fee?: number;
+  min_order?: number;
+  eta_minutes?: number | null;
+}
+export function getDeliveryQuote(slug: string, pincode: string) {
+  return req<DeliveryQuote>(
+    `/public/site/${encodeURIComponent(slug)}/delivery-quote?pincode=${encodeURIComponent(pincode)}`,
+  );
+}
