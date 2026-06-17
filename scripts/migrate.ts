@@ -45,7 +45,97 @@ async function getMigrations(): Promise<Migration[]> {
   return migrations;
 }
 
-async function createMigrationsLog(client: any): Promise<void> {
+/**
+ * Split a SQL file into individual statements on top-level semicolons.
+ *
+ * Naive split-on-";" breaks any statement containing a dollar-quoted body
+ * (DO $$ ... $$, CREATE FUNCTION ... $$ ... $$), because those bodies legally
+ * contain semicolons. This splitter tracks dollar-quote tags ($$, $tag$),
+ * single-quoted strings, and line/block comments so procedural migrations
+ * (needed for RLS role setup) run as single statements.
+ */
+function splitSqlStatements(sql: string): string[] {
+  const statements: string[] = [];
+  let current = '';
+  let i = 0;
+  let dollarTag: string | null = null; // active dollar-quote tag, e.g. "$$" or "$body$"
+  let inSingleQuote = false;
+
+  while (i < sql.length) {
+    const ch = sql[i];
+    const two = sql.slice(i, i + 2);
+
+    if (dollarTag) {
+      if (sql.startsWith(dollarTag, i)) {
+        current += dollarTag;
+        i += dollarTag.length;
+        dollarTag = null;
+        continue;
+      }
+      current += ch;
+      i++;
+      continue;
+    }
+
+    if (inSingleQuote) {
+      current += ch;
+      i++;
+      if (ch === "'") inSingleQuote = false;
+      continue;
+    }
+
+    // Line comment — copy through end of line
+    if (two === '--') {
+      const nl = sql.indexOf('\n', i);
+      const end = nl === -1 ? sql.length : nl;
+      current += sql.slice(i, end);
+      i = end;
+      continue;
+    }
+
+    // Block comment — copy through closing */
+    if (two === '/*') {
+      const close = sql.indexOf('*/', i + 2);
+      const end = close === -1 ? sql.length : close + 2;
+      current += sql.slice(i, end);
+      i = end;
+      continue;
+    }
+
+    // Opening dollar-quote tag: $$ or $identifier$
+    if (ch === '$') {
+      const match = /^\$[A-Za-z0-9_]*\$/.exec(sql.slice(i));
+      if (match) {
+        dollarTag = match[0];
+        current += dollarTag;
+        i += dollarTag.length;
+        continue;
+      }
+    }
+
+    if (ch === "'") {
+      inSingleQuote = true;
+      current += ch;
+      i++;
+      continue;
+    }
+
+    if (ch === ';') {
+      const trimmed = current.trim();
+      if (trimmed.length > 0) statements.push(trimmed);
+      current = '';
+      i++;
+      continue;
+    }
+
+    current += ch;
+    i++;
+  }
+
+  const tail = current.trim();
+  if (tail.length > 0) statements.push(tail);
+  return statements;
+}
   await client.query(`
     CREATE TABLE IF NOT EXISTS migrations_log (
       id SERIAL PRIMARY KEY,
@@ -102,11 +192,8 @@ async function runMigrations(): Promise<void> {
         try {
           console.log(`📄 Running migration: ${migration.name}`);
 
-          // Split SQL statements by semicolon and filter empty statements
-          const statements = migration.sql
-            .split(';')
-            .map(s => s.trim())
-            .filter(s => s.length > 0);
+          // Split SQL statements (dollar-quote / comment / string aware)
+          const statements = splitSqlStatements(migration.sql);
 
           // Execute each statement
           for (const statement of statements) {
