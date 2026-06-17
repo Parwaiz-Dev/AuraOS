@@ -28,6 +28,8 @@ import ZomatoSettings from './pages/ZomatoSettings'
 import Subscription from './pages/Subscription'
 import OwnerDashboard from './pages/OwnerDashboard'
 import MultiOutlet from './pages/MultiOutlet'
+import Reservations from './pages/Reservations'
+import DeliveryZones from './pages/DeliveryZones'
 import Features from './pages/Features'
 import Monitoring from './pages/Monitoring'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -162,6 +164,20 @@ function App() {
                 <ProtectedRoute superAdminOnly>
                   <Layout>
                     <MultiOutlet />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/reservations" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Reservations />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/delivery-zones" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <DeliveryZones />
                   </Layout>
                 </ProtectedRoute>
               } />
