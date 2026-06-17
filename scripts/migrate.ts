@@ -136,6 +136,8 @@ function splitSqlStatements(sql: string): string[] {
   if (tail.length > 0) statements.push(tail);
   return statements;
 }
+
+async function createMigrationsLog(client: any): Promise<void> {
   await client.query(`
     CREATE TABLE IF NOT EXISTS migrations_log (
       id SERIAL PRIMARY KEY,
