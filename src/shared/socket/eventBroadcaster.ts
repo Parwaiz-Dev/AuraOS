@@ -13,6 +13,9 @@ export enum SocketEvent {
   ORDER_CANCELLED = 'ORDER_CANCELLED',
   ORDER_DELAYED = 'ORDER_DELAYED',   // fired by background job when order exceeds threshold
 
+  // Reservation events
+  RESERVATION_CREATED = 'RESERVATION_CREATED',
+
   // Payment events
   PAYMENT_CREATED = 'PAYMENT_CREATED',
   PAYMENT_UPDATED = 'PAYMENT_UPDATED',
@@ -39,6 +42,7 @@ export interface OrderEventPayload {
   status: string;
   total_amount?: number;
   table_id?: string | null;
+  order_number?: string; // when set, update is also pushed to the public order room
 }
 
 export interface DelayedOrderPayload {
@@ -57,6 +61,12 @@ export interface PaymentEventPayload {
   order_id: string;
   status: string;
   amount: number;
+}
+
+export interface ReservationEventPayload {
+  reservation_id: string;
+  restaurant_id: string;
+  status: string;
 }
 
 export interface InventoryEventPayload {
@@ -92,10 +102,14 @@ export class EventBroadcaster {
   }
 
   /**
-   * Broadcast order status update to restaurant room
+   * Broadcast order status update to restaurant room (and the public order room
+   * when order_number is provided, so the customer's tracking page updates live).
    */
   broadcastOrderUpdated(payload: OrderEventPayload): void {
     this.io.to(`restaurant:${payload.restaurant_id}`).emit(SocketEvent.ORDER_UPDATED, payload);
+    if (payload.order_number) {
+      this.io.to(`order:${payload.order_number}`).emit(SocketEvent.ORDER_UPDATED, payload);
+    }
   }
 
   /**
@@ -106,17 +120,23 @@ export class EventBroadcaster {
   }
 
   /**
-   * Broadcast order completed event to restaurant room
+   * Broadcast order completed event to restaurant room (+ public order room)
    */
   broadcastOrderCompleted(payload: OrderEventPayload): void {
     this.io.to(`restaurant:${payload.restaurant_id}`).emit(SocketEvent.ORDER_COMPLETED, payload);
+    if (payload.order_number) {
+      this.io.to(`order:${payload.order_number}`).emit(SocketEvent.ORDER_COMPLETED, payload);
+    }
   }
 
   /**
-   * Broadcast order cancelled event to restaurant room
+   * Broadcast order cancelled event to restaurant room (+ public order room)
    */
   broadcastOrderCancelled(payload: OrderEventPayload): void {
     this.io.to(`restaurant:${payload.restaurant_id}`).emit(SocketEvent.ORDER_CANCELLED, payload);
+    if (payload.order_number) {
+      this.io.to(`order:${payload.order_number}`).emit(SocketEvent.ORDER_CANCELLED, payload);
+    }
   }
 
   /**
@@ -127,6 +147,13 @@ export class EventBroadcaster {
    */
   broadcastOrderDelayed(payload: DelayedOrderPayload): void {
     this.io.to(`restaurant:${payload.restaurant_id}`).emit(SocketEvent.ORDER_DELAYED, payload);
+  }
+
+  /**
+   * Broadcast a new reservation to the restaurant room (owner dashboard).
+   */
+  broadcastReservationCreated(payload: ReservationEventPayload): void {
+    this.io.to(`restaurant:${payload.restaurant_id}`).emit(SocketEvent.RESERVATION_CREATED, payload);
   }
 
   /**

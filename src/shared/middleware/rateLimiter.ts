@@ -52,6 +52,26 @@ export const publicOrderRateLimiter = rateLimit({
 });
 
 /**
+ * Customer OTP rate limiter — applied to /customers/otp/request and /verify.
+ * 5 requests per 10 minutes per IP. Strict, because each request can trigger an
+ * SMS — this blunts SMS-bombing and cost-abuse on the public surface.
+ */
+export const otpRequestRateLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      code: 'TOO_MANY_REQUESTS',
+      message: 'Too many code requests. Please wait a few minutes.',
+    },
+  },
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+/**
  * General API rate limiter — applied globally.
  * 300 requests per minute per IP.
  * Prevents API abuse.

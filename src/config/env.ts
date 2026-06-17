@@ -112,6 +112,19 @@ const EnvSchema = z.object({
   // Leave EMPTY to lock those endpoints for everyone (safe default).
   // Example: SUPER_ADMIN_EMAILS=owner@auraos.com,ops@auraos.com
   SUPER_ADMIN_EMAILS: z.string().optional().default(''),
+
+  // Redis (optional) — enables tenant-config caching, OTP storage, distributed
+  // rate limiting and Socket.io scaling. If unset, the app falls back to
+  // PostgreSQL and in-memory stores. Example: redis://redis:6379
+  REDIS_URL: z.string().optional().default(''),
+
+  // Multi-tenant routing.
+  // PLATFORM_DOMAIN: the apex under which restaurant subdomains live, so
+  //   `pizza.auraos.com` resolves to the restaurant whose slug is `pizza`.
+  // DEV_TENANT_SLUG: on localhost (no real subdomain) the host->tenant
+  //   middleware uses this slug so the website is testable in development.
+  PLATFORM_DOMAIN:  z.string().optional().default('auraos.com'),
+  DEV_TENANT_SLUG:  z.string().optional().default(''),
 });
 
 // ── Validate ──────────────────────────────────────────────────────────────────

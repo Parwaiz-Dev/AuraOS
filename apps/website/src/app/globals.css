@@ -1,0 +1,15 @@
+:root {
+  --brand-primary: #111827;
+  --brand-secondary: #f59e0b;
+  --brand-accent: #10b981;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}

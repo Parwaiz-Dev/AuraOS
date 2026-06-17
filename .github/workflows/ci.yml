@@ -1,0 +1,172 @@
+# ── AuraOS CI Pipeline ────────────────────────────────────────────────────────
+# Triggers on every push and pull request to verify:
+#   1. Backend TypeScript compiles cleanly
+#   2. Frontend TypeScript + Vite build succeeds
+#   3. All three Docker images build without errors
+#   4. docker-compose.yml is syntactically valid
+#
+# Fail-fast: Docker builds only run if both TypeScript builds pass.
+# npm caching avoids re-downloading packages on every run.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  # ── Backend TypeScript Build ─────────────────────────────────────────────
+  # Why: Catches type errors, missing imports, and invalid tsconfig before
+  #      they reach Docker. Faster feedback than a full Docker build.
+  backend-build:
+    name: Backend — TypeScript Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          # cache-dependency-path defaults to ./package-lock.json
+          cache-dependency-path: package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+        # npm ci enforces exact versions from package-lock.json —
+        # deterministic installs, no surprises in CI
+
+      - name: Build backend (TypeScript)
+        run: npm run build
+        # Runs: tsc && tsc-alias
+        # Failures here = type errors, config issues, or missing modules
+
+  # ── Backend Tests (incl. RLS tenant isolation) ───────────────────────────
+  # Why: A row-level-security regression silently leaks one tenant's data to
+  #      another. This job spins up real Postgres, applies all migrations
+  #      (including 021_rls.sql), and runs the cross-tenant isolation test.
+  #      Treat a failure here as a release blocker.
+  backend-test:
+    name: Backend — Tests + RLS Isolation
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: auraos_user
+          POSTGRES_PASSWORD: auraos_password
+          POSTGRES_DB: auraos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U auraos_user -d auraos_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://auraos_user:auraos_password@localhost:5432/auraos_test
+      JWT_SECRET: ci-test-secret-key-at-least-32-characters-long
+      JWT_REFRESH_SECRET: ci-test-refresh-secret-at-least-32-characters
+      NODE_ENV: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Apply database migrations
+        run: npm run migrate
+
+      - name: Run tests (RLS isolation + suite)
+        run: npm test
+
+  # ── Frontend TypeScript + Vite Build ─────────────────────────────────────
+  # Why: Catches React/TSX type errors, broken imports, and Vite build
+  #      failures before they reach the Docker multi-stage build.
+  frontend-build:
+    name: Frontend — TypeScript + Vite Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          # Point to client/package-lock.json for frontend dependency caching
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: client
+
+      - name: Build frontend (TypeScript + Vite)
+        run: npm run build
+        working-directory: client
+        # Runs: tsc && vite build
+        # Failures here = TSX type errors, broken Vite config, or missing assets
+
+  # ── Docker Image Builds ──────────────────────────────────────────────────
+  # Why: Validates that all Dockerfiles produce valid images. Catches:
+  #      - COPY paths that reference non-existent files
+  #      - Multi-stage build errors in the frontend Dockerfile
+  #      - Missing nginx config files
+  #      - Broken npm ci inside Docker (e.g., missing package-lock.json)
+  #
+  # Depends on both TypeScript builds passing — no point building Docker
+  # images if the source code doesn't compile.
+  docker-build:
+    name: Docker — Build All Images
+    runs-on: ubuntu-latest
+    needs: [backend-build, frontend-build]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        # Buildx enables parallel builds and advanced caching
+
+      - name: Build backend Docker image
+        run: docker build -t auraos-backend:ci .
+        # Uses root Dockerfile — node:20 base, tsc + tsc-alias build
+
+      - name: Build frontend Docker image
+        run: docker build -t auraos-frontend:ci ./client
+        # Uses client/Dockerfile — multi-stage: node:20-alpine → nginx:1.25-alpine
+
+      - name: Build nginx reverse proxy Docker image
+        run: docker build -t auraos-nginx:ci ./nginx
+        # Uses nginx/Dockerfile — copies nginx.conf into nginx:1.25-alpine
+
+  # ── docker-compose.yml Validation ────────────────────────────────────────
+  # Why: Ensures the compose file is valid YAML, all service references
+  #      resolve, and no syntax errors exist. Runs in parallel with other
+  #      jobs (no dependency) because it only needs the compose file itself.
+  validate-compose:
+    name: Validate docker-compose.yml
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose configuration
+        run: docker compose config
+        # docker compose config parses + validates the YAML, resolves
+        # variable interpolation, and prints the normalized config.
+        # Exit code ≠ 0 means invalid syntax.

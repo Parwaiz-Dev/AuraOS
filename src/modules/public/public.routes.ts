@@ -180,6 +180,7 @@ const GuestOrderSchema = z.object({
 
   // Common
   notes: z.string().max(500).optional(),
+  delivery_address_id: z.string().uuid().optional().nullable(),
   items: z
     .array(
       z.object({
@@ -346,6 +347,24 @@ router.post('/order/:slug', publicOrderRateLimiter, async (req: Request, res: Re
       'CREATED',
       tokenNumber,
     );
+
+    // ── Optional: link this order to a logged-in customer ────────────────
+    // If a customer Bearer token is present, attach customer_id/phone and the
+    // delivery address so it shows in their order history. Guests skip this.
+    try {
+      const authHeader = req.headers.authorization;
+      if (authHeader?.startsWith('Bearer ')) {
+        const { verifyCustomerToken } = await import('@/modules/customers/customer-auth.service');
+        const customer = verifyCustomerToken(authHeader.substring(7));
+        await query(
+          `UPDATE orders SET customer_id = $1, customer_phone = $2, delivery_address_id = $3
+           WHERE id = $4 AND restaurant_id = $5`,
+          [customer.customerId, customer.phone, (payload as any).delivery_address_id ?? null, order.id, restaurantId],
+        );
+      }
+    } catch {
+      // Invalid/expired customer token → treat as guest order, do not fail.
+    }
 
     // ── Save modifier selections for each order item ─────────────────────
     for (let idx = 0; idx < orderItems.length; idx++) {

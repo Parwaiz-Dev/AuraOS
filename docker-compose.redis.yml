@@ -1,0 +1,33 @@
+# Redis override — Phase 0b
+#
+# Kept separate from docker-compose.yml so it doesn't disturb in-progress changes
+# to the main compose file. Use it with:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.redis.yml up
+#
+# Then set REDIS_URL=redis://redis:6379 in the backend environment to activate
+# tenant-config caching, OTP storage, rate limiting and Socket.io scaling.
+# Without it, the app falls back to PostgreSQL + in-memory stores automatically.
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: auraos-redis
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    environment:
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  redis_data:
