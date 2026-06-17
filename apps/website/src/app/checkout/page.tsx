@@ -9,6 +9,7 @@ import {
   getCustomerToken, setCustomerToken,
   type PlaceOrderPayload,
 } from '@/lib/client';
+import { payWithRazorpay } from '@/lib/razorpay';
 
 type Step = 'login' | 'otp' | 'details';
 
@@ -71,6 +72,20 @@ export default function CheckoutPage() {
         })),
       };
       const result = await placeOrder(slug, payload);
+
+      // Online payment → open Razorpay, verify, then track. If the gateway is
+      // not configured, the order has no razorpay payload and we proceed as a
+      // pending order (owner can collect/confirm).
+      if (payment === 'ONLINE' && result.razorpay) {
+        try {
+          await payWithRazorpay(result, { name: slug, customerName: name, customerPhone: phone });
+        } catch (e) {
+          // Payment cancelled/failed — order exists but unpaid. Send to tracking
+          // with a note rather than losing the order.
+          setError(`Payment not completed: ${(e as Error).message}. Your order is saved as pending.`);
+        }
+      }
+
       clear();
       router.push(`/track/${encodeURIComponent(result.order_number)}`);
     } catch (e) { setError((e as Error).message); setBusy(false); }
