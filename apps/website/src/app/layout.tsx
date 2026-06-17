@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { currentSlug } from '@/lib/request';
 import { fetchSiteConfig } from '@/lib/api';
+import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
+import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 import './globals.css';
 
 /**
@@ -49,9 +51,46 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       } as React.CSSProperties)
     : undefined;
 
+  // LocalBusiness structured data — helps each restaurant appear on Google.
+  const jsonLd = config
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Restaurant',
+        name: config.restaurant.name,
+        image: config.restaurant.hero_image_url || config.restaurant.logo_url || undefined,
+        telephone: config.restaurant.phone || undefined,
+        address: config.restaurant.address || undefined,
+        email: config.restaurant.email || undefined,
+        geo:
+          config.restaurant.latitude != null && config.restaurant.longitude != null
+            ? {
+                '@type': 'GeoCoordinates',
+                latitude: config.restaurant.latitude,
+                longitude: config.restaurant.longitude,
+              }
+            : undefined,
+        sameAs: Object.values(config.restaurant.social_links || {}),
+      }
+    : null;
+
   return (
     <html lang="en">
-      <body style={themeVars}>{children}</body>
+      <head>
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="theme-color" content={theme?.primary_color || '#111827'} />
+        {jsonLd ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+        ) : null}
+      </head>
+      <body style={themeVars} className="flex min-h-screen flex-col">
+        {config ? <SiteHeader config={config} /> : null}
+        {children}
+        {config ? <SiteFooter config={config} /> : null}
+        <ServiceWorkerRegister />
+      </body>
     </html>
   );
 }

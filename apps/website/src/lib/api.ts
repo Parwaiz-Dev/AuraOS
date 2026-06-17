@@ -61,3 +61,106 @@ export async function fetchSiteConfig(slug: string): Promise<SiteConfig | null> 
     return null;
   }
 }
+
+// ── Gallery ───────────────────────────────────────────────────────────────────
+
+export interface GalleryImage {
+  id: string;
+  url: string;
+  caption: string | null;
+  category: 'food' | 'interior' | 'event';
+  sort_order: number;
+}
+
+export async function fetchGallery(slug: string): Promise<GalleryImage[]> {
+  try {
+    const res = await fetch(`${CORE_API_URL}/public/site/${encodeURIComponent(slug)}/gallery`, {
+      next: { revalidate: 300, tags: [`site:${slug}`] },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return (json.data as GalleryImage[]) || [];
+  } catch (err) {
+    console.error('[website] fetchGallery failed:', err);
+    return [];
+  }
+}
+
+// ── Editable page content (Website Builder sections) ───────────────────────────
+
+export interface PageContent {
+  page_key: string;
+  content: Record<string, unknown>;
+  is_published: boolean;
+}
+
+export async function fetchPage(slug: string, key: string): Promise<PageContent> {
+  try {
+    const res = await fetch(
+      `${CORE_API_URL}/public/site/${encodeURIComponent(slug)}/page/${encodeURIComponent(key)}`,
+      { next: { revalidate: 300, tags: [`site:${slug}`] } },
+    );
+    if (!res.ok) return { page_key: key, content: {}, is_published: false };
+    const json = await res.json();
+    return json.data as PageContent;
+  } catch (err) {
+    console.error('[website] fetchPage failed:', err);
+    return { page_key: key, content: {}, is_published: false };
+  }
+}
+
+// ── Menu (reuses existing Core public menu endpoint) ───────────────────────────
+
+export interface MenuModifierOption {
+  id: string;
+  name: string;
+  price_adjustment: number;
+}
+
+export interface MenuModifierGroup {
+  id: string;
+  name: string;
+  selection_type: string;
+  min_select: number;
+  max_select: number;
+  options: MenuModifierOption[];
+}
+
+export interface MenuItem {
+  id: string;
+  category_id: string | null;
+  name: string;
+  description: string | null;
+  price: number;
+  is_active: boolean;
+  is_vegetarian?: boolean;
+  image_url?: string | null;
+  modifier_groups: MenuModifierGroup[];
+}
+
+export interface MenuCategory {
+  id: string;
+  name: string;
+  is_active: boolean;
+}
+
+export interface Menu {
+  restaurant: { id: string; name: string; slug: string; qr_mode: string };
+  categories: MenuCategory[];
+  items: MenuItem[];
+}
+
+export async function fetchMenu(slug: string): Promise<Menu | null> {
+  try {
+    const res = await fetch(`${CORE_API_URL}/public/menu/${encodeURIComponent(slug)}`, {
+      next: { revalidate: 120, tags: [`site:${slug}`] },
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Core API ${res.status}`);
+    const json = await res.json();
+    return json.data as Menu;
+  } catch (err) {
+    console.error('[website] fetchMenu failed:', err);
+    return null;
+  }
+}
