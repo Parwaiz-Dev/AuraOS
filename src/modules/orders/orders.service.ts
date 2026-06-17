@@ -244,7 +244,8 @@ export class OrdersService {
       CREATED: ['ACCEPTED', 'CANCELLED'],
       ACCEPTED: ['PREPARING', 'CANCELLED'],
       PREPARING: ['READY', 'CANCELLED'],
-      READY: ['COMPLETED', 'CANCELLED'],
+      READY: ['OUT_FOR_DELIVERY', 'COMPLETED', 'CANCELLED'],
+      OUT_FOR_DELIVERY: ['COMPLETED', 'CANCELLED'],
       COMPLETED: [],
       CANCELLED: [],
     };

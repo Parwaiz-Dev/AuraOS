@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { requireSite } from '@/lib/page';
 import { fetchMenu } from '@/lib/api';
+import { AddToCart } from '@/components/AddToCart';
 
 export const revalidate = 120;
 
@@ -78,9 +79,12 @@ function MenuSection({
                 <p className="mt-1 text-xs opacity-50">Customisable</p>
               ) : null}
             </div>
-            <span className="whitespace-nowrap font-semibold" style={{ color: 'var(--brand-accent)' }}>
-              ₹{Number(item.price).toFixed(0)}
-            </span>
+            <div className="flex flex-col items-end gap-2">
+              <span className="whitespace-nowrap font-semibold" style={{ color: 'var(--brand-accent)' }}>
+                ₹{Number(item.price).toFixed(0)}
+              </span>
+              <AddToCart menuItemId={item.id} name={item.name} price={Number(item.price)} />
+            </div>
           </li>
         ))}
       </ul>

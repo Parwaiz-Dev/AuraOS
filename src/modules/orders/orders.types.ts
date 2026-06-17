@@ -15,7 +15,7 @@ export const CreateOrderRequestSchema = z.object({
 });
 
 export const UpdateOrderRequestSchema = z.object({
-  status: z.enum(['ACCEPTED', 'PREPARING', 'READY', 'COMPLETED', 'CANCELLED']).optional(),
+  status: z.enum(['ACCEPTED', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY', 'COMPLETED', 'CANCELLED']).optional(),
   special_instructions: z.string().max(1000).optional(),
 });
 
@@ -40,7 +40,7 @@ export interface Order {
   token_number: string | null;
   order_type: 'DINE_IN' | 'PARCEL' | 'ONLINE';
   order_source: 'WAITER' | 'RECEPTION' | 'QR' | 'WHATSAPP' | 'ZOMATO';
-  status: 'CREATED' | 'ACCEPTED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED';
+  status: 'CREATED' | 'ACCEPTED' | 'PREPARING' | 'READY' | 'OUT_FOR_DELIVERY' | 'COMPLETED' | 'CANCELLED';
   total_amount: number;
   priority_score: number;
   special_instructions?: string;

@@ -122,4 +122,27 @@ router.get('/site/:slug/page/:key', async (req: Request, res: Response, next: Ne
   }
 });
 
+// ─── GET /public/site/:slug/order/:orderNumber ──────────────────────────────
+// Public order tracking by order number — powers the live status page. Returns
+// only non-sensitive status fields. Real-time updates ride Socket.io; this is the
+// initial fetch + a polling fallback.
+router.get('/site/:slug/order/:orderNumber', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const restaurant = await getRestaurantBySlug(req.params.slug);
+    if (!restaurant) throw new NotFoundError('Restaurant not found');
+
+    const result = await query(
+      `SELECT id, restaurant_id, order_number, status, total_amount, token_number, created_at, updated_at
+       FROM orders
+       WHERE restaurant_id = $1 AND order_number = $2
+       LIMIT 1`,
+      [restaurant.id, req.params.orderNumber],
+    );
+    if (result.rows.length === 0) throw new NotFoundError('Order not found');
+    res.json(successResponse(result.rows[0]));
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

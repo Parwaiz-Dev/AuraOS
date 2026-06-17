@@ -1,4 +1,5 @@
 import type { SiteConfig } from '@/lib/api';
+import { CartLink } from '@/components/CartLink';
 
 /** Days for opening-hours rendering, indexed 0=Sun..6=Sat. */
 export const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -33,6 +34,7 @@ export function SiteHeader({ config }: { config: SiteConfig }) {
             {n.label}
           </a>
         ))}
+        <CartLink />
       </nav>
     </header>
   );

@@ -134,6 +134,7 @@ export class OrdersController {
         status: order.status,
         total_amount: Number(order.total_amount),
         table_id: order.table_id,
+        order_number: order.order_number,
       };
 
       if (order.status === 'COMPLETED') {

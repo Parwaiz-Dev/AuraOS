@@ -45,8 +45,16 @@ async function startServer() {
     io.on('connection', (socket) => {
       const token: string | undefined = socket.handshake.auth?.token;
 
+      // ── Public customers (no token): may subscribe ONLY to a specific order's
+      // room to receive live status for an order they placed. They cannot join
+      // tenant-wide rooms, so no cross-order or staff data leaks.
       if (!token) {
-        socket.disconnect(true);
+        socket.on('track_order', (data: { orderNumber: string }) => {
+          if (data?.orderNumber && typeof data.orderNumber === 'string') {
+            socket.join(`order:${data.orderNumber}`);
+          }
+        });
+        socket.on('disconnect', () => { /* auto-leaves rooms */ });
         return;
       }
 

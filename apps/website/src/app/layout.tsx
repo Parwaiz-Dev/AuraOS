@@ -3,6 +3,7 @@ import { currentSlug } from '@/lib/request';
 import { fetchSiteConfig } from '@/lib/api';
 import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
+import { Providers } from '@/components/Providers';
 import './globals.css';
 
 /**
@@ -86,9 +87,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         ) : null}
       </head>
       <body style={themeVars} className="flex min-h-screen flex-col">
-        {config ? <SiteHeader config={config} /> : null}
-        {children}
-        {config ? <SiteFooter config={config} /> : null}
+        <Providers slug={slug || ''}>
+          {config ? <SiteHeader config={config} /> : null}
+          {children}
+          {config ? <SiteFooter config={config} /> : null}
+        </Providers>
         <ServiceWorkerRegister />
       </body>
     </html>
