@@ -137,7 +137,7 @@ const BillScreen: React.FC<BillScreenProps> = ({ orderId, tableNumber, onClose, 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-white">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
+      <div className="flex items-center justify-between px-4 pb-3 header-safe border-b border-gray-200 shrink-0">
         <h2 className="font-bold text-gray-900 text-lg">Bill</h2>
         <button type="button" title="Close" onClick={onClose} className="p-2 rounded-full hover:bg-gray-100">
           <XMarkIcon className="w-5 h-5 text-gray-500" />
@@ -263,7 +263,7 @@ const BillScreen: React.FC<BillScreenProps> = ({ orderId, tableNumber, onClose, 
       </div>
 
       {/* Action buttons */}
-      <div className="p-4 border-t border-gray-200 grid grid-cols-2 gap-3 shrink-0">
+      <div className="px-4 pt-4 footer-safe border-t border-gray-200 grid grid-cols-2 gap-3 shrink-0">
         <Button
           variant="outline"
           fullWidth

@@ -1,0 +1,215 @@
+{
+  "description": "Payment Processing Examples",
+  "endpoints": [
+    {
+      "name": "Create Payment",
+      "method": "POST",
+      "path": "/api/v1/payments",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "Content-Type": "application/json"
+      },
+      "request": {
+        "body": {
+          "order_id": "ord-2024-001",
+          "amount": 450.00,
+          "payment_method": "CASH",
+          "notes": "Customer paid in cash"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "success": true,
+          "data": {
+            "id": "pay-2024-001",
+            "order_id": "ord-2024-001",
+            "order_number": "ORD-001",
+            "restaurant_id": "rest-001",
+            "amount": 450.00,
+            "payment_method": "CASH",
+            "status": "COMPLETED",
+            "transaction_id": null,
+            "notes": "Customer paid in cash",
+            "created_at": "2026-06-18T10:55:00Z",
+            "updated_at": "2026-06-18T10:55:00Z"
+          },
+          "message": "Payment processed successfully",
+          "timestamp": "2026-06-18T10:55:00Z"
+        }
+      }
+    },
+    {
+      "name": "Create Card Payment",
+      "method": "POST",
+      "path": "/api/v1/payments",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "Content-Type": "application/json"
+      },
+      "request": {
+        "body": {
+          "order_id": "ord-2024-002",
+          "amount": 280.00,
+          "payment_method": "CARD",
+          "card_details": {
+            "last_four": "4242",
+            "cardholder_name": "John Doe"
+          },
+          "notes": "Debit card payment"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "success": true,
+          "data": {
+            "id": "pay-2024-002",
+            "order_id": "ord-2024-002",
+            "order_number": "ORD-002",
+            "restaurant_id": "rest-001",
+            "amount": 280.00,
+            "payment_method": "CARD",
+            "status": "COMPLETED",
+            "transaction_id": "txn_1234567890",
+            "card_details": {
+              "last_four": "4242"
+            },
+            "notes": "Debit card payment",
+            "created_at": "2026-06-18T11:00:00Z",
+            "updated_at": "2026-06-18T11:00:00Z"
+          },
+          "timestamp": "2026-06-18T11:00:00Z"
+        }
+      }
+    },
+    {
+      "name": "Partial Payment",
+      "method": "POST",
+      "path": "/api/v1/payments",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "Content-Type": "application/json"
+      },
+      "request": {
+        "body": {
+          "order_id": "ord-2024-003",
+          "amount": 225.00,
+          "payment_method": "CASH",
+          "is_partial": true,
+          "notes": "First partial payment (50% of total)"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "success": true,
+          "data": {
+            "id": "pay-2024-003",
+            "order_id": "ord-2024-003",
+            "order_number": "ORD-003",
+            "restaurant_id": "rest-001",
+            "amount": 225.00,
+            "total_order_amount": 450.00,
+            "payment_method": "CASH",
+            "status": "COMPLETED",
+            "is_partial": true,
+            "pending_amount": 225.00,
+            "notes": "First partial payment (50% of total)",
+            "created_at": "2026-06-18T11:05:00Z"
+          },
+          "timestamp": "2026-06-18T11:05:00Z"
+        }
+      }
+    },
+    {
+      "name": "Get Payment Details",
+      "method": "GET",
+      "path": "/api/v1/payments/pay-2024-001",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "id": "pay-2024-001",
+            "order_id": "ord-2024-001",
+            "order_number": "ORD-001",
+            "restaurant_id": "rest-001",
+            "amount": 450.00,
+            "payment_method": "CASH",
+            "status": "COMPLETED",
+            "transaction_id": null,
+            "notes": "Customer paid in cash",
+            "created_by": "19e56e1f-bd89-4adf-9307-43ec30aff4a8",
+            "created_at": "2026-06-18T10:55:00Z",
+            "updated_at": "2026-06-18T10:55:00Z"
+          },
+          "timestamp": "2026-06-18T10:55:00Z"
+        }
+      }
+    },
+    {
+      "name": "List Payments for Order",
+      "method": "GET",
+      "path": "/api/v1/orders/ord-2024-003/payments",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "order_id": "ord-2024-003",
+            "order_total": 450.00,
+            "payments": [
+              {
+                "id": "pay-2024-003",
+                "amount": 225.00,
+                "payment_method": "CASH",
+                "status": "COMPLETED",
+                "is_partial": true,
+                "created_at": "2026-06-18T11:05:00Z"
+              },
+              {
+                "id": "pay-2024-004",
+                "amount": 225.00,
+                "payment_method": "CARD",
+                "status": "COMPLETED",
+                "is_partial": true,
+                "transaction_id": "txn_0987654321",
+                "created_at": "2026-06-18T11:10:00Z"
+              }
+            ],
+            "total_paid": 450.00,
+            "balance": 0.00,
+            "payment_complete": true
+          },
+          "timestamp": "2026-06-18T11:10:00Z"
+        }
+      }
+    },
+    {
+      "name": "Payment Failed Response",
+      "method": "POST",
+      "path": "/api/v1/payments",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "errorResponse": {
+        "status": 400,
+        "body": {
+          "success": false,
+          "error": {
+            "message": "Payment amount exceeds order total",
+            "code": "INVALID_PAYMENT_AMOUNT"
+          },
+          "timestamp": "2026-06-18T11:15:00Z"
+        }
+      }
+    }
+  ]
+}

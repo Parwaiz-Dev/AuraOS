@@ -1,0 +1,1 @@
+"""Service layer — business logic, Pandas processing, and caching."""

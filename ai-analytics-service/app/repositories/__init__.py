@@ -1,0 +1,1 @@
+"""Repository layer — async SQLAlchemy queries for read-only analytics."""

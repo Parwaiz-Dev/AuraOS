@@ -1,0 +1,317 @@
+{
+  "description": "Order Management Examples",
+  "endpoints": [
+    {
+      "name": "Create New Order",
+      "method": "POST",
+      "path": "/api/v1/orders",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "Content-Type": "application/json"
+      },
+      "request": {
+        "body": {
+          "table_id": "tbl-001",
+          "special_instructions": "No onions on items",
+          "items": [
+            {
+              "menu_item_id": "item-001",
+              "quantity": 2,
+              "special_instructions": "Extra hot",
+              "modifiers": [
+                {
+                  "modifier_option_id": "mod-opt-002",
+                  "name": "Medium"
+                },
+                {
+                  "modifier_option_id": "mod-opt-005",
+                  "name": "Oat Milk"
+                }
+              ]
+            },
+            {
+              "menu_item_id": "item-003",
+              "quantity": 1,
+              "special_instructions": null,
+              "modifiers": []
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "success": true,
+          "data": {
+            "id": "ord-2024-001",
+            "order_number": "ORD-001",
+            "restaurant_id": "rest-001",
+            "table_id": "tbl-001",
+            "table_number": 1,
+            "status": "CREATED",
+            "subtotal": 410.00,
+            "tax": 40.00,
+            "total_amount": 450.00,
+            "payment_status": "PENDING",
+            "special_instructions": "No onions on items",
+            "items": [
+              {
+                "id": "oi-001",
+                "order_id": "ord-2024-001",
+                "menu_item_id": "item-001",
+                "menu_item_name": "Latte",
+                "quantity": 2,
+                "unit_price": 120.00,
+                "special_instructions": "Extra hot",
+                "modifiers": [
+                  {
+                    "name": "Medium",
+                    "price_adjustment": 20.00
+                  },
+                  {
+                    "name": "Oat Milk",
+                    "price_adjustment": 30.00
+                  }
+                ],
+                "item_total": 340.00,
+                "status": "PENDING",
+                "created_at": "2026-06-18T10:30:00Z"
+              },
+              {
+                "id": "oi-002",
+                "order_id": "ord-2024-001",
+                "menu_item_id": "item-003",
+                "menu_item_name": "Croissant",
+                "quantity": 1,
+                "unit_price": 60.00,
+                "special_instructions": null,
+                "modifiers": [],
+                "item_total": 60.00,
+                "status": "PENDING",
+                "created_at": "2026-06-18T10:30:00Z"
+              }
+            ],
+            "created_at": "2026-06-18T10:30:00Z",
+            "updated_at": "2026-06-18T10:30:00Z"
+          },
+          "message": "Order created successfully",
+          "timestamp": "2026-06-18T10:30:00Z"
+        }
+      }
+    },
+    {
+      "name": "Get Order Details",
+      "method": "GET",
+      "path": "/api/v1/orders/ord-2024-001",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "id": "ord-2024-001",
+            "order_number": "ORD-001",
+            "restaurant_id": "rest-001",
+            "table_id": "tbl-001",
+            "table_number": 1,
+            "status": "PREPARING",
+            "subtotal": 410.00,
+            "tax": 40.00,
+            "total_amount": 450.00,
+            "payment_status": "PENDING",
+            "special_instructions": "No onions on items",
+            "items": [
+              {
+                "id": "oi-001",
+                "order_id": "ord-2024-001",
+                "menu_item_id": "item-001",
+                "menu_item_name": "Latte",
+                "quantity": 2,
+                "unit_price": 120.00,
+                "special_instructions": "Extra hot",
+                "modifiers": [
+                  {
+                    "name": "Medium",
+                    "price_adjustment": 20.00
+                  },
+                  {
+                    "name": "Oat Milk",
+                    "price_adjustment": 30.00
+                  }
+                ],
+                "item_total": 340.00,
+                "status": "PREPARING",
+                "created_at": "2026-06-18T10:30:00Z",
+                "updated_at": "2026-06-18T10:35:00Z"
+              },
+              {
+                "id": "oi-002",
+                "order_id": "ord-2024-001",
+                "menu_item_id": "item-003",
+                "menu_item_name": "Croissant",
+                "quantity": 1,
+                "unit_price": 60.00,
+                "special_instructions": null,
+                "modifiers": [],
+                "item_total": 60.00,
+                "status": "DONE",
+                "created_at": "2026-06-18T10:30:00Z",
+                "updated_at": "2026-06-18T10:38:00Z"
+              }
+            ],
+            "created_at": "2026-06-18T10:30:00Z",
+            "updated_at": "2026-06-18T10:38:00Z"
+          },
+          "timestamp": "2026-06-18T10:38:00Z"
+        }
+      }
+    },
+    {
+      "name": "Add Items to Existing Order",
+      "method": "POST",
+      "path": "/api/v1/orders/ord-2024-001/items",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "Content-Type": "application/json"
+      },
+      "request": {
+        "body": {
+          "items": [
+            {
+              "menu_item_id": "item-002",
+              "quantity": 1,
+              "special_instructions": "No sugar",
+              "modifiers": []
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "id": "ord-2024-001",
+            "order_number": "ORD-001",
+            "status": "PREPARING",
+            "subtotal": 490.00,
+            "tax": 49.00,
+            "total_amount": 539.00,
+            "items": [
+              {
+                "id": "oi-001",
+                "order_id": "ord-2024-001",
+                "menu_item_id": "item-001",
+                "menu_item_name": "Latte",
+                "quantity": 2,
+                "unit_price": 120.00,
+                "item_total": 340.00,
+                "status": "PREPARING"
+              },
+              {
+                "id": "oi-002",
+                "order_id": "ord-2024-001",
+                "menu_item_id": "item-003",
+                "menu_item_name": "Croissant",
+                "quantity": 1,
+                "unit_price": 60.00,
+                "item_total": 60.00,
+                "status": "DONE"
+              },
+              {
+                "id": "oi-003",
+                "order_id": "ord-2024-001",
+                "menu_item_id": "item-002",
+                "menu_item_name": "Americano",
+                "quantity": 1,
+                "unit_price": 80.00,
+                "special_instructions": "No sugar",
+                "item_total": 80.00,
+                "status": "PENDING",
+                "created_at": "2026-06-18T10:45:00Z"
+              }
+            ],
+            "message": "1 item added to order",
+            "updated_at": "2026-06-18T10:45:00Z"
+          },
+          "timestamp": "2026-06-18T10:45:00Z"
+        }
+      }
+    },
+    {
+      "name": "Update Order Status",
+      "method": "PATCH",
+      "path": "/api/v1/orders/ord-2024-001",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "Content-Type": "application/json"
+      },
+      "request": {
+        "body": {
+          "status": "READY"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "id": "ord-2024-001",
+            "order_number": "ORD-001",
+            "status": "READY",
+            "total_amount": 450.00,
+            "message": "Order status updated to READY",
+            "updated_at": "2026-06-18T10:50:00Z"
+          },
+          "timestamp": "2026-06-18T10:50:00Z"
+        }
+      }
+    },
+    {
+      "name": "List All Orders for Restaurant",
+      "method": "GET",
+      "path": "/api/v1/orders?status=PREPARING&limit=10&offset=0",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "orders": [
+              {
+                "id": "ord-2024-001",
+                "order_number": "ORD-001",
+                "table_id": "tbl-001",
+                "table_number": 1,
+                "status": "PREPARING",
+                "total_amount": 450.00,
+                "item_count": 3,
+                "created_at": "2026-06-18T10:30:00Z",
+                "updated_at": "2026-06-18T10:50:00Z"
+              },
+              {
+                "id": "ord-2024-002",
+                "order_number": "ORD-002",
+                "table_id": "tbl-002",
+                "table_number": 2,
+                "status": "PREPARING",
+                "total_amount": 280.00,
+                "item_count": 2,
+                "created_at": "2026-06-18T10:40:00Z",
+                "updated_at": "2026-06-18T10:45:00Z"
+              }
+            ],
+            "total": 2,
+            "limit": 10,
+            "offset": 0
+          },
+          "timestamp": "2026-06-18T10:50:00Z"
+        }
+      }
+    }
+  ]
+}

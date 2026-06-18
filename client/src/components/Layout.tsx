@@ -34,6 +34,7 @@ import {
   ChevronUpDownIcon,
   CheckIcon,
 } from '@heroicons/react/24/outline'
+import { TicketIcon, StarIcon, GiftIcon } from '@heroicons/react/24/outline'
 import { cn } from '../lib/utils'
 
 interface NavItem {
@@ -60,6 +61,10 @@ const navItems: NavItem[] = [
   { name: 'Reports',          href: '/reports',            icon: ChartBarIcon,             roles: ['ADMIN'], featureKey: 'reports' },
   { name: 'QR Settings',      href: '/qr-settings',        icon: QrCodeIcon,               roles: ['ADMIN'], featureKey: 'qr_ordering', restaurantTypes: NAV_TYPE_VISIBILITY['QR Settings'] },
   { name: 'Delivery Zones',   href: '/delivery-zones',     icon: MapPinIcon,               roles: ['ADMIN'] },
+  { name: 'Reservations',     href: '/reservations',       icon: CalendarDaysIcon },
+  { name: 'Coupons',          href: '/coupons',            icon: TicketIcon,               roles: ['ADMIN'] },
+  { name: 'Loyalty',          href: '/loyalty',            icon: GiftIcon,                 roles: ['ADMIN'] },
+  { name: 'Reviews',          href: '/reviews',            icon: StarIcon,                 roles: ['ADMIN'] },
   { name: 'Modifiers',        href: '/modifiers',          icon: TagIcon,                  roles: ['ADMIN'] },
   { name: 'Zomato',           href: '/zomato-settings',    icon: BuildingStorefrontIcon,   roles: ['ADMIN'], featureKey: 'zomato' },
   { name: 'Subscription',     href: '/subscription',       icon: CreditCardIcon,           roles: ['ADMIN'] },
@@ -293,7 +298,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Main content */}
       <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
         {/* Mobile top bar */}
-        <header className="lg:hidden sticky top-0 z-20 glass border-b border-slate-200 px-4 py-3 flex items-center gap-3">
+        <header className="lg:hidden sticky top-0 z-20 glass border-b border-slate-200 px-4 py-3 header-safe flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-2 rounded-lg text-slate-500 hover:bg-slate-100"

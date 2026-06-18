@@ -1,0 +1,250 @@
+{
+  "description": "Error Response Examples",
+  "category": "Error Handling Patterns",
+  "errorExamples": [
+    {
+      "title": "Authentication Error - Invalid Credentials",
+      "status": 401,
+      "request": {
+        "endpoint": "POST /api/v1/auth/login",
+        "body": {
+          "email": "invalid@example.com",
+          "password": "wrongpassword"
+        }
+      },
+      "response": {
+        "success": false,
+        "error": {
+          "message": "Invalid email or password",
+          "code": "INVALID_CREDENTIALS",
+          "details": null
+        },
+        "timestamp": "2026-06-18T10:30:00Z"
+      }
+    },
+    {
+      "title": "Authentication Error - Token Expired",
+      "status": 401,
+      "request": {
+        "endpoint": "GET /api/v1/orders",
+        "headers": {
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.expired_token.signature"
+        }
+      },
+      "response": {
+        "success": false,
+        "error": {
+          "message": "Token has expired",
+          "code": "TOKEN_EXPIRED",
+          "details": "Please refresh your token"
+        },
+        "timestamp": "2026-06-18T10:35:00Z"
+      }
+    },
+    {
+      "title": "Authorization Error - Insufficient Permissions",
+      "status": 403,
+      "request": {
+        "endpoint": "POST /api/v1/users",
+        "headers": {
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        },
+        "note": "WAITER role trying to create user"
+      },
+      "response": {
+        "success": false,
+        "error": {
+          "message": "Insufficient permissions for this operation",
+          "code": "FORBIDDEN",
+          "details": "Only ADMIN users can create new users"
+        },
+        "timestamp": "2026-06-18T10:40:00Z"
+      }
+    },
+    {
+      "title": "Resource Not Found",
+      "status": 404,
+      "request": {
+        "endpoint": "GET /api/v1/orders/non-existent-id",
+        "headers": {
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
+      },
+      "response": {
+        "success": false,
+        "error": {
+          "message": "Order not found",
+          "code": "NOT_FOUND",
+          "details": "Order with ID 'non-existent-id' does not exist"
+        },
+        "timestamp": "2026-06-18T10:45:00Z"
+      }
+    },
+    {
+      "title": "Validation Error - Invalid Request",
+      "status": 400,
+      "request": {
+        "endpoint": "POST /api/v1/orders",
+        "body": {
+          "table_id": "tbl-001",
+          "items": []
+        },
+        "note": "Missing required fields"
+      },
+      "response": {
+        "success": false,
+        "error": {
+          "message": "Validation failed",
+          "code": "VALIDATION_ERROR",
+          "details": {
+            "items": "At least one item is required",
+            "special_instructions": "Optional field"
+          }
+        },
+        "timestamp": "2026-06-18T10:50:00Z"
+      }
+    },
+    {
+      "title": "Invalid State Transition",
+      "status": 400,
+      "request": {
+        "endpoint": "PATCH /api/v1/orders/ord-2024-001",
+        "body": {
+          "status": "PREPARING"
+        },
+        "note": "Trying to move from COMPLETED to PREPARING (invalid)"
+      },
+      "response": {
+        "success": false,
+        "error": {
+          "message": "Invalid state transition",
+          "code": "INVALID_TRANSITION",
+          "details": "Cannot transition from COMPLETED to PREPARING"
+        },
+        "timestamp": "2026-06-18T10:55:00Z"
+      }
+    },
+    {
+      "title": "Rate Limit Exceeded",
+      "status": 429,
+      "request": {
+        "endpoint": "POST /api/v1/auth/login",
+        "note": "Too many login attempts"
+      },
+      "response": {
+        "success": false,
+        "error": {
+          "message": "Too many requests",
+          "code": "RATE_LIMIT_EXCEEDED",
+          "details": "Maximum 10 login attempts per minute. Please try again in 45 seconds."
+        },
+        "headers": {
+          "Retry-After": "45"
+        },
+        "timestamp": "2026-06-18T11:00:00Z"
+      }
+    },
+    {
+      "title": "Server Error",
+      "status": 500,
+      "request": {
+        "endpoint": "GET /api/v1/orders",
+        "note": "Database connection issue"
+      },
+      "response": {
+        "success": false,
+        "error": {
+          "message": "Internal server error",
+          "code": "INTERNAL_ERROR",
+          "details": "An unexpected error occurred. Please contact support."
+        },
+        "timestamp": "2026-06-18T11:05:00Z"
+      }
+    },
+    {
+      "title": "Conflict Error - Resource Already Exists",
+      "status": 409,
+      "request": {
+        "endpoint": "POST /api/v1/tables",
+        "body": {
+          "table_number": 1,
+          "capacity": 4
+        },
+        "note": "Table number 1 already exists"
+      },
+      "response": {
+        "success": false,
+        "error": {
+          "message": "Resource already exists",
+          "code": "CONFLICT",
+          "details": "Table number 1 already exists in this restaurant"
+        },
+        "timestamp": "2026-06-18T11:10:00Z"
+      }
+    },
+    {
+      "title": "Business Logic Error - Order Already Completed",
+      "status": 400,
+      "request": {
+        "endpoint": "POST /api/v1/orders/ord-2024-001/items",
+        "body": {
+          "items": [{ "menu_item_id": "item-001", "quantity": 1 }]
+        },
+        "note": "Trying to add items to completed order"
+      },
+      "response": {
+        "success": false,
+        "error": {
+          "message": "Cannot add items to completed order",
+          "code": "INVALID_ORDER_STATE",
+          "details": "Order ORD-001 is already completed and cannot be modified"
+        },
+        "timestamp": "2026-06-18T11:15:00Z"
+      }
+    },
+    {
+      "title": "Payment Amount Error",
+      "status": 400,
+      "request": {
+        "endpoint": "POST /api/v1/payments",
+        "body": {
+          "order_id": "ord-2024-001",
+          "amount": 500.00
+        },
+        "note": "Amount exceeds order total"
+      },
+      "response": {
+        "success": false,
+        "error": {
+          "message": "Payment amount exceeds order total",
+          "code": "INVALID_PAYMENT_AMOUNT",
+          "details": "Order total is 450.00 but payment amount is 500.00"
+        },
+        "timestamp": "2026-06-18T11:20:00Z"
+      }
+    }
+  ],
+  "errorCodes": {
+    "INVALID_CREDENTIALS": "Email/password combination not found",
+    "TOKEN_EXPIRED": "JWT token has expired",
+    "INVALID_TOKEN": "JWT token is malformed or invalid",
+    "FORBIDDEN": "User lacks required permissions",
+    "NOT_FOUND": "Resource does not exist",
+    "VALIDATION_ERROR": "Request validation failed",
+    "INVALID_TRANSITION": "Invalid state machine transition",
+    "RATE_LIMIT_EXCEEDED": "Too many requests in time window",
+    "INTERNAL_ERROR": "Unexpected server error",
+    "CONFLICT": "Resource already exists",
+    "INVALID_ORDER_STATE": "Order cannot be modified in current state",
+    "INVALID_PAYMENT_AMOUNT": "Payment amount invalid for order"
+  },
+  "httpStatusCodes": {
+    "400": "Bad Request - Validation or business logic error",
+    "401": "Unauthorized - Authentication required",
+    "403": "Forbidden - Insufficient permissions",
+    "404": "Not Found - Resource does not exist",
+    "409": "Conflict - Resource already exists",
+    "429": "Too Many Requests - Rate limit exceeded",
+    "500": "Internal Server Error - Unexpected error"
+  }
+}

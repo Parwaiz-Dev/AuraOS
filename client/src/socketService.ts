@@ -2,7 +2,7 @@ import { io, Socket } from 'socket.io-client'
 
 class SocketService {
   private socket: Socket | null = null
-  private url = 'http://localhost:3000'
+  private url = ''
   private listeners: Map<string, Set<Function>> = new Map()
 
   connect(token: string) {

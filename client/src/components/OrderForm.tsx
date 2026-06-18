@@ -326,7 +326,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ order, initialTableId, onClose, o
 
       <div className="relative ml-auto w-full max-w-5xl bg-gray-50 shadow-2xl flex flex-col h-full animate-slide-up">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shrink-0">
+        <div className="bg-white border-b border-gray-200 px-6 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] flex items-center justify-between shrink-0">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
               {addToExisting && existingOrder ? 'Add Items to Order' : 'New Order'}
@@ -574,7 +574,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ order, initialTableId, onClose, o
               </div>
 
               {/* Cart footer */}
-              <div className="border-t border-gray-100 p-4 space-y-3">
+              <div className="border-t border-gray-100 px-4 pt-4 footer-safe space-y-3">
                 {!addToExisting && (
                   <input
                     type="text"

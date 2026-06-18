@@ -31,7 +31,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
   useEffect(() => {
     if (token && user) {
-      const newSocket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000', {
+      const newSocket = io(import.meta.env.VITE_SOCKET_URL || '', {
         transports: ['websocket'],
         auth: {
           token

@@ -1,0 +1,94 @@
+{
+  "description": "Authentication Examples",
+  "endpoints": [
+    {
+      "name": "Login",
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "request": {
+        "body": {
+          "email": "john@demo-kitchen.local",
+          "password": "securepassword123"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE5ZTU2ZTFmLWJkODktNGFkZi05MzA3LTQzZWMzMGFmZjRhOCIsImVtYWlsIjoiam9obkBkZW1vLWtpdGNoZW4ubG9jYWwiLCJyb2xlIjoiV0FJVEVSIiwicmVzdGF1cmFudElkIjoiYTFiMmMzZDQtZTVmNi00Nzg5LTAxMjMtNDU2Nzg5YWJjZGVmIiwiaWF0IjoxNzE4NzAwMDAwLCJleHAiOjE3MTg3MDA5MDB9.signature",
+            "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE5ZTU2ZTFmLWJkODktNGFkZi05MzA3LTQzZWMzMGFmZjRhOCIsImlhdCI6MTcxODcwMDAwMCwiZXhwIjoxNzE5MzA0ODAwfQ.refresh_signature",
+            "user": {
+              "id": "19e56e1f-bd89-4adf-9307-43ec30aff4a8",
+              "email": "john@demo-kitchen.local",
+              "name": "John Waiter",
+              "role": "WAITER",
+              "restaurant_id": "a1b2c3d4-e5f6-4789-0123-456789abcdef",
+              "is_active": true,
+              "created_at": "2026-05-01T08:00:00Z"
+            }
+          },
+          "message": "Login successful",
+          "timestamp": "2026-06-18T10:30:00Z"
+        }
+      },
+      "errorResponse": {
+        "status": 401,
+        "body": {
+          "success": false,
+          "error": {
+            "message": "Invalid email or password",
+            "code": "INVALID_CREDENTIALS"
+          },
+          "timestamp": "2026-06-18T10:30:00Z"
+        }
+      }
+    },
+    {
+      "name": "Refresh Token",
+      "method": "POST",
+      "path": "/api/v1/auth/refresh",
+      "request": {
+        "body": {
+          "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE5ZTU2ZTFmLWJkODktNGFkZi05MzA3LTQzZWMzMGFmZjRhOCIsImlhdCI6MTcxODcwMDAwMCwiZXhwIjoxNzE5MzA0ODAwfQ.refresh_signature"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new_token_payload.new_signature",
+            "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new_refresh_payload.new_signature"
+          },
+          "timestamp": "2026-06-18T10:35:00Z"
+        }
+      }
+    },
+    {
+      "name": "Get Current User Profile",
+      "method": "GET",
+      "path": "/api/v1/auth/me",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "id": "19e56e1f-bd89-4adf-9307-43ec30aff4a8",
+            "email": "john@demo-kitchen.local",
+            "name": "John Waiter",
+            "role": "WAITER",
+            "restaurant_id": "a1b2c3d4-e5f6-4789-0123-456789abcdef",
+            "is_active": true,
+            "created_at": "2026-05-01T08:00:00Z",
+            "updated_at": "2026-06-18T10:00:00Z"
+          },
+          "timestamp": "2026-06-18T10:30:00Z"
+        }
+      }
+    }
+  ]
+}

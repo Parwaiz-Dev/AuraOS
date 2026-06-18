@@ -1,0 +1,227 @@
+{
+  "description": "Menu Examples - Categories and Items",
+  "endpoints": [
+    {
+      "name": "Get Complete Menu",
+      "method": "GET",
+      "path": "/api/v1/menus",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "categories": [
+              {
+                "id": "cat-001",
+                "restaurant_id": "rest-001",
+                "name": "Beverages",
+                "description": "Hot and cold drinks",
+                "display_order": 1,
+                "is_active": true,
+                "created_at": "2026-01-01T08:00:00Z",
+                "updated_at": "2026-01-01T08:00:00Z",
+                "items": [
+                  {
+                    "id": "item-001",
+                    "restaurant_id": "rest-001",
+                    "category_id": "cat-001",
+                    "name": "Latte",
+                    "description": "Espresso with steamed milk",
+                    "price": 120.00,
+                    "prep_time_minutes": 5,
+                    "is_vegetarian": true,
+                    "is_active": true,
+                    "display_order": 1,
+                    "modifier_groups": [
+                      {
+                        "id": "mod-grp-001",
+                        "name": "Size",
+                        "selection_type": "single",
+                        "min_select": 1,
+                        "max_select": 1,
+                        "options": [
+                          {
+                            "id": "mod-opt-001",
+                            "name": "Small",
+                            "price_adjustment": 0.00,
+                            "sort_order": 1
+                          },
+                          {
+                            "id": "mod-opt-002",
+                            "name": "Medium",
+                            "price_adjustment": 20.00,
+                            "sort_order": 2
+                          },
+                          {
+                            "id": "mod-opt-003",
+                            "name": "Large",
+                            "price_adjustment": 40.00,
+                            "sort_order": 3
+                          }
+                        ]
+                      },
+                      {
+                        "id": "mod-grp-002",
+                        "name": "Milk Type",
+                        "selection_type": "single",
+                        "min_select": 1,
+                        "max_select": 1,
+                        "options": [
+                          {
+                            "id": "mod-opt-004",
+                            "name": "Full Cream",
+                            "price_adjustment": 0.00,
+                            "sort_order": 1
+                          },
+                          {
+                            "id": "mod-opt-005",
+                            "name": "Oat Milk",
+                            "price_adjustment": 30.00,
+                            "sort_order": 2
+                          },
+                          {
+                            "id": "mod-opt-006",
+                            "name": "Almond Milk",
+                            "price_adjustment": 30.00,
+                            "sort_order": 3
+                          }
+                        ]
+                      },
+                      {
+                        "id": "mod-grp-003",
+                        "name": "Extras",
+                        "selection_type": "multiple",
+                        "min_select": 0,
+                        "max_select": 3,
+                        "options": [
+                          {
+                            "id": "mod-opt-007",
+                            "name": "Whipped Cream",
+                            "price_adjustment": 15.00,
+                            "sort_order": 1
+                          },
+                          {
+                            "id": "mod-opt-008",
+                            "name": "Extra Shot",
+                            "price_adjustment": 25.00,
+                            "sort_order": 2
+                          }
+                        ]
+                      }
+                    ],
+                    "created_at": "2026-01-01T08:00:00Z",
+                    "updated_at": "2026-01-01T08:00:00Z"
+                  },
+                  {
+                    "id": "item-002",
+                    "restaurant_id": "rest-001",
+                    "category_id": "cat-001",
+                    "name": "Americano",
+                    "description": "Double espresso with hot water",
+                    "price": 80.00,
+                    "prep_time_minutes": 3,
+                    "is_vegetarian": true,
+                    "is_active": true,
+                    "display_order": 2,
+                    "modifier_groups": [],
+                    "created_at": "2026-01-01T08:00:00Z",
+                    "updated_at": "2026-01-01T08:00:00Z"
+                  }
+                ]
+              },
+              {
+                "id": "cat-002",
+                "restaurant_id": "rest-001",
+                "name": "Pastries",
+                "description": "Fresh baked items",
+                "display_order": 2,
+                "is_active": true,
+                "created_at": "2026-01-01T08:00:00Z",
+                "updated_at": "2026-01-01T08:00:00Z",
+                "items": [
+                  {
+                    "id": "item-003",
+                    "restaurant_id": "rest-001",
+                    "category_id": "cat-002",
+                    "name": "Croissant",
+                    "description": "Buttery, flaky pastry",
+                    "price": 60.00,
+                    "prep_time_minutes": 2,
+                    "is_vegetarian": true,
+                    "is_active": true,
+                    "display_order": 1,
+                    "modifier_groups": [],
+                    "created_at": "2026-01-01T08:00:00Z",
+                    "updated_at": "2026-01-01T08:00:00Z"
+                  }
+                ]
+              }
+            ]
+          },
+          "timestamp": "2026-06-18T10:30:00Z"
+        }
+      }
+    },
+    {
+      "name": "Get Specific Menu Item with Modifiers",
+      "method": "GET",
+      "path": "/api/v1/menus/items/item-001",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "id": "item-001",
+            "restaurant_id": "rest-001",
+            "category_id": "cat-001",
+            "name": "Latte",
+            "description": "Espresso with steamed milk",
+            "price": 120.00,
+            "prep_time_minutes": 5,
+            "is_vegetarian": true,
+            "is_active": true,
+            "display_order": 1,
+            "modifier_groups": [
+              {
+                "id": "mod-grp-001",
+                "name": "Size",
+                "selection_type": "single",
+                "min_select": 1,
+                "max_select": 1,
+                "options": [
+                  {
+                    "id": "mod-opt-001",
+                    "name": "Small",
+                    "price_adjustment": 0.00,
+                    "sort_order": 1
+                  },
+                  {
+                    "id": "mod-opt-002",
+                    "name": "Medium",
+                    "price_adjustment": 20.00,
+                    "sort_order": 2
+                  },
+                  {
+                    "id": "mod-opt-003",
+                    "name": "Large",
+                    "price_adjustment": 40.00,
+                    "sort_order": 3
+                  }
+                ]
+              }
+            ],
+            "created_at": "2026-01-01T08:00:00Z",
+            "updated_at": "2026-01-01T08:00:00Z"
+          },
+          "timestamp": "2026-06-18T10:30:00Z"
+        }
+      }
+    }
+  ]
+}

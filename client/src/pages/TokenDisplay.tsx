@@ -8,7 +8,7 @@ interface TokenOrder {
   order_number: string
 }
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1') as string
+const API_BASE = (import.meta.env.VITE_API_URL || '/api/v1') as string
 
 const TokenDisplay: React.FC = () => {
   const [searchParams] = useSearchParams()

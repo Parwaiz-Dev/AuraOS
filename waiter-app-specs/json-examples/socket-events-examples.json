@@ -1,0 +1,273 @@
+{
+  "description": "Real-Time WebSocket Event Examples",
+  "category": "Socket.IO Events",
+  "connectionEvents": [
+    {
+      "name": "Connection Handshake",
+      "step": "1. Client connects with JWT",
+      "event": {
+        "type": "connection",
+        "handshakeData": {
+          "auth": {
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        }
+      },
+      "serverResponse": "✅ Authentication successful, user can receive events"
+    },
+    {
+      "name": "Join Restaurant Room",
+      "step": "2. Client requests to join restaurant",
+      "event": {
+        "type": "emit",
+        "eventName": "join_restaurant",
+        "payload": {
+          "restaurant_id": "a1b2c3d4-e5f6-4789-0123-456789abcdef"
+        }
+      },
+      "serverResponse": {
+        "status": "joined",
+        "room": "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+        "timestamp": "2026-06-18T10:30:00Z"
+      }
+    }
+  ],
+  "orderEvents": [
+    {
+      "name": "Order Created",
+      "eventName": "ORDER_CREATED",
+      "broadcaster": "server",
+      "broadcastRoom": "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+      "payload": {
+        "order_id": "ord-2024-001",
+        "order_number": "ORD-001",
+        "table_id": "tbl-001",
+        "table_number": 1,
+        "status": "CREATED",
+        "total_amount": 450.00,
+        "item_count": 3,
+        "items": [
+          {
+            "id": "oi-001",
+            "menu_item_name": "Latte",
+            "quantity": 2,
+            "special_instructions": "Extra hot"
+          },
+          {
+            "id": "oi-002",
+            "menu_item_name": "Croissant",
+            "quantity": 1
+          }
+        ],
+        "created_at": "2026-06-18T10:30:00Z"
+      },
+      "useCase": "Kitchen display system alerts when new order arrives"
+    },
+    {
+      "name": "Order Status Updated",
+      "eventName": "ORDER_UPDATED",
+      "broadcaster": "server",
+      "broadcastRoom": [
+        "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+        "order:ORD-001"
+      ],
+      "payload": {
+        "order_id": "ord-2024-001",
+        "order_number": "ORD-001",
+        "old_status": "CREATED",
+        "new_status": "ACCEPTED",
+        "updated_by": "kitchen_user_id",
+        "updated_at": "2026-06-18T10:31:00Z"
+      },
+      "useCase": "Waiter sees order was accepted by kitchen"
+    },
+    {
+      "name": "Order Ready for Pickup",
+      "eventName": "ORDER_READY",
+      "broadcaster": "server",
+      "broadcastRoom": [
+        "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+        "order:ORD-001"
+      ],
+      "payload": {
+        "order_id": "ord-2024-001",
+        "order_number": "ORD-001",
+        "table_id": "tbl-001",
+        "table_number": 1,
+        "ready_at": "2026-06-18T10:42:00Z",
+        "items": [
+          { "id": "oi-001", "name": "Latte (x2)", "status": "DONE" },
+          { "id": "oi-002", "name": "Croissant", "status": "DONE" }
+        ]
+      },
+      "useCase": "Waiter gets PRIORITY alert with sound to pick up order"
+    },
+    {
+      "name": "Order Completed",
+      "eventName": "ORDER_COMPLETED",
+      "broadcaster": "server",
+      "broadcastRoom": "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+      "payload": {
+        "order_id": "ord-2024-001",
+        "order_number": "ORD-001",
+        "table_id": "tbl-001",
+        "final_amount": 450.00,
+        "completed_at": "2026-06-18T10:55:00Z"
+      },
+      "useCase": "Analytics: Order fulfillment tracking"
+    },
+    {
+      "name": "Order Cancelled",
+      "eventName": "ORDER_CANCELLED",
+      "broadcaster": "server",
+      "broadcastRoom": "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+      "payload": {
+        "order_id": "ord-2024-001",
+        "order_number": "ORD-001",
+        "reason": "Customer changed mind",
+        "cancelled_by": "waiter_user_id",
+        "cancelled_at": "2026-06-18T10:35:00Z"
+      },
+      "useCase": "Kitchen stops preparing, removes from queue"
+    },
+    {
+      "name": "Order Delayed",
+      "eventName": "ORDER_DELAYED",
+      "broadcaster": "server",
+      "broadcastRoom": [
+        "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+        "order:ORD-001"
+      ],
+      "payload": {
+        "order_id": "ord-2024-001",
+        "order_number": "ORD-001",
+        "table_number": 1,
+        "created_at": "2026-06-18T10:30:00Z",
+        "elapsed_minutes": 15,
+        "threshold_minutes": 15,
+        "status": "PREPARING",
+        "delayed_at": "2026-06-18T10:45:00Z"
+      },
+      "useCase": "Alert: Order exceeds SLA threshold"
+    }
+  ],
+  "paymentEvents": [
+    {
+      "name": "Payment Initiated",
+      "eventName": "PAYMENT_CREATED",
+      "broadcaster": "server",
+      "broadcastRoom": [
+        "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+        "order:ORD-001"
+      ],
+      "payload": {
+        "payment_id": "pay-2024-001",
+        "order_id": "ord-2024-001",
+        "order_number": "ORD-001",
+        "amount": 450.00,
+        "payment_method": "CASH",
+        "status": "PENDING",
+        "created_at": "2026-06-18T10:55:00Z"
+      },
+      "useCase": "Dashboard: Payment being processed"
+    },
+    {
+      "name": "Payment Completed",
+      "eventName": "PAYMENT_COMPLETED",
+      "broadcaster": "server",
+      "broadcastRoom": [
+        "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+        "order:ORD-001"
+      ],
+      "payload": {
+        "payment_id": "pay-2024-001",
+        "order_id": "ord-2024-001",
+        "order_number": "ORD-001",
+        "amount": 450.00,
+        "payment_method": "CASH",
+        "status": "COMPLETED",
+        "transaction_id": null,
+        "completed_at": "2026-06-18T10:56:00Z"
+      },
+      "useCase": "Order fulfilled, revenue recorded"
+    }
+  ],
+  "tableEvents": [
+    {
+      "name": "Table Occupied",
+      "eventName": "TABLE_OCCUPIED",
+      "broadcaster": "server",
+      "broadcastRoom": "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+      "payload": {
+        "table_id": "tbl-001",
+        "table_number": 1,
+        "status": "OCCUPIED",
+        "customer_count": 4,
+        "current_order_id": "ord-2024-001",
+        "seated_at": "2026-06-18T10:30:00Z"
+      },
+      "useCase": "Dashboard: Update table status visualization"
+    },
+    {
+      "name": "Table Freed",
+      "eventName": "TABLE_FREED",
+      "broadcaster": "server",
+      "broadcastRoom": "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+      "payload": {
+        "table_id": "tbl-001",
+        "table_number": 1,
+        "status": "VACANT",
+        "freed_at": "2026-06-18T11:00:00Z",
+        "last_order_duration_minutes": 30
+      },
+      "useCase": "Dashboard: Table available for new customers"
+    }
+  ],
+  "inventoryEvents": [
+    {
+      "name": "Low Stock Alert",
+      "eventName": "INVENTORY_LOW_STOCK",
+      "broadcaster": "server",
+      "broadcastRoom": "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+      "payload": {
+        "item_id": "item-001",
+        "item_name": "Latte",
+        "current_stock": 5,
+        "reorder_level": 10,
+        "unit": "cups",
+        "alerted_at": "2026-06-18T10:30:00Z"
+      },
+      "useCase": "Manager: Notification to reorder coffee"
+    },
+    {
+      "name": "Inventory Updated",
+      "eventName": "INVENTORY_UPDATED",
+      "broadcaster": "server",
+      "broadcastRoom": "restaurant:a1b2c3d4-e5f6-4789-0123-456789abcdef",
+      "payload": {
+        "item_id": "item-001",
+        "item_name": "Latte",
+        "previous_stock": 5,
+        "new_stock": 15,
+        "change": 10,
+        "updated_by": "manager_user_id",
+        "updated_at": "2026-06-18T10:35:00Z"
+      },
+      "useCase": "Dashboard: Inventory count updated"
+    }
+  ],
+  "clientExamples": [
+    {
+      "description": "React Native Example - Listen to Order Ready Event",
+      "code": "import io from 'socket.io-client';\n\nconst socket = io('http://localhost:3000', {\n  auth: {\n    token: accessToken\n  }\n});\n\nsocket.on('connect', () => {\n  console.log('Connected to server');\n  socket.emit('join_restaurant', {\n    restaurant_id: restaurantId\n  });\n});\n\nsocket.on('ORDER_READY', (payload) => {\n  console.log('Order ready for pickup:', payload);\n  playSound('order-ready.mp3');\n  dispatch(showNotification({\n    title: `Order ${payload.order_number} Ready!`,\n    body: `Table ${payload.table_number}`,\n    priority: 'high'\n  }));\n});\n\nsocket.on('disconnect', () => {\n  console.log('Disconnected from server');\n});"
+    },
+    {
+      "description": "Handle Order Status Updates",
+      "code": "socket.on('ORDER_UPDATED', (payload) => {\n  const { order_number, new_status } = payload;\n  \n  // Update Redux store\n  dispatch(updateOrderStatus({\n    orderNumber: order_number,\n    status: new_status\n  }));\n  \n  // Show toast notification\n  if (new_status === 'PREPARING') {\n    showToast(`Order ${order_number} is being prepared`);\n  }\n});"
+    },
+    {
+      "description": "Reconnection with Exponential Backoff",
+      "code": "const socket = io('http://localhost:3000', {\n  auth: { token: accessToken },\n  reconnection: true,\n  reconnectionDelay: 1000,\n  reconnectionDelayMax: 5000,\n  reconnectionAttempts: 5\n});\n\nsocket.on('reconnect', () => {\n  console.log('Reconnected after disconnect');\n  \n  // Re-join restaurant room\n  socket.emit('join_restaurant', {\n    restaurant_id: restaurantId\n  });\n  \n  // Sync any pending actions\n  syncPendingOrders();\n});"
+    }
+  ]
+}

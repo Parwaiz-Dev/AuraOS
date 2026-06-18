@@ -218,7 +218,7 @@ const TableOrderPanel: React.FC<TableOrderPanelProps> = ({
             </div>
 
             {/* Action footer */}
-            <div className="border-t border-gray-100 p-4 space-y-2 shrink-0">
+            <div className="border-t border-gray-100 px-4 pt-4 footer-safe space-y-2 shrink-0">
               {/* READY → Collect Payment is the single primary action */}
               {order.status === 'READY' && (
                 <Button

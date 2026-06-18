@@ -1,0 +1,176 @@
+{
+  "description": "Table Management Examples",
+  "endpoints": [
+    {
+      "name": "List All Tables",
+      "method": "GET",
+      "path": "/api/v1/tables",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "tables": [
+              {
+                "id": "tbl-001",
+                "restaurant_id": "rest-001",
+                "table_number": 1,
+                "capacity": 4,
+                "location": "Main Hall - Window",
+                "is_active": true,
+                "created_at": "2026-01-01T08:00:00Z",
+                "updated_at": "2026-01-01T08:00:00Z"
+              },
+              {
+                "id": "tbl-002",
+                "restaurant_id": "rest-001",
+                "table_number": 2,
+                "capacity": 2,
+                "location": "Bar Counter",
+                "is_active": true,
+                "created_at": "2026-01-01T08:00:00Z",
+                "updated_at": "2026-01-01T08:00:00Z"
+              },
+              {
+                "id": "tbl-003",
+                "restaurant_id": "rest-001",
+                "table_number": 3,
+                "capacity": 6,
+                "location": "Private Room",
+                "is_active": true,
+                "created_at": "2026-01-01T08:00:00Z",
+                "updated_at": "2026-01-01T08:00:00Z"
+              }
+            ],
+            "total": 3
+          },
+          "timestamp": "2026-06-18T10:30:00Z"
+        }
+      }
+    },
+    {
+      "name": "Get Tables with Real-Time Status",
+      "method": "GET",
+      "path": "/api/v1/tables/with-status",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "tables": [
+              {
+                "id": "tbl-001",
+                "restaurant_id": "rest-001",
+                "table_number": 1,
+                "capacity": 4,
+                "location": "Main Hall - Window",
+                "is_active": true,
+                "status": "OCCUPIED",
+                "current_order_id": "ord-2024-001",
+                "current_order_number": "ORD-001",
+                "current_order_status": "READY",
+                "customer_count": 4,
+                "seated_at": "2026-06-18T10:00:00Z",
+                "created_at": "2026-01-01T08:00:00Z",
+                "updated_at": "2026-06-18T10:30:00Z"
+              },
+              {
+                "id": "tbl-002",
+                "restaurant_id": "rest-001",
+                "table_number": 2,
+                "capacity": 2,
+                "location": "Bar Counter",
+                "is_active": true,
+                "status": "VACANT",
+                "current_order_id": null,
+                "customer_count": 0,
+                "seated_at": null,
+                "created_at": "2026-01-01T08:00:00Z",
+                "updated_at": "2026-01-01T08:00:00Z"
+              },
+              {
+                "id": "tbl-003",
+                "restaurant_id": "rest-001",
+                "table_number": 3,
+                "capacity": 6,
+                "location": "Private Room",
+                "is_active": true,
+                "status": "RESERVED",
+                "current_order_id": null,
+                "reservation_name": "Smith Party",
+                "reservation_time": "2026-06-18T20:00:00Z",
+                "customer_count": 0,
+                "created_at": "2026-01-01T08:00:00Z",
+                "updated_at": "2026-06-18T10:30:00Z"
+              }
+            ],
+            "total": 3,
+            "summary": {
+              "total_tables": 3,
+              "occupied": 1,
+              "vacant": 1,
+              "reserved": 1,
+              "total_capacity": 12,
+              "current_guests": 4
+            }
+          },
+          "timestamp": "2026-06-18T10:30:00Z"
+        }
+      }
+    },
+    {
+      "name": "Get Single Table Details",
+      "method": "GET",
+      "path": "/api/v1/tables/tbl-001",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "data": {
+            "id": "tbl-001",
+            "restaurant_id": "rest-001",
+            "table_number": 1,
+            "capacity": 4,
+            "location": "Main Hall - Window",
+            "is_active": true,
+            "status": "OCCUPIED",
+            "current_order_id": "ord-2024-001",
+            "current_order_number": "ORD-001",
+            "current_order_status": "READY",
+            "customer_count": 4,
+            "seated_at": "2026-06-18T10:00:00Z",
+            "last_order_total": 450.00,
+            "created_at": "2026-01-01T08:00:00Z",
+            "updated_at": "2026-06-18T10:30:00Z",
+            "recent_orders": [
+              {
+                "id": "ord-2024-001",
+                "order_number": "ORD-001",
+                "status": "READY",
+                "total_amount": 450.00,
+                "created_at": "2026-06-18T10:15:00Z"
+              },
+              {
+                "id": "ord-2024-002",
+                "order_number": "ORD-002",
+                "status": "COMPLETED",
+                "total_amount": 320.00,
+                "created_at": "2026-06-17T19:00:00Z"
+              }
+            ]
+          },
+          "timestamp": "2026-06-18T10:30:00Z"
+        }
+      }
+    }
+  ]
+}

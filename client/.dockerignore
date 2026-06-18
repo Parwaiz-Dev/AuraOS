@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.git/
+*.md
+!FRONTEND_STARTUP.md
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+.DS_Store

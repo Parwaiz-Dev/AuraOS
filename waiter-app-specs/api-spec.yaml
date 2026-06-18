@@ -1,0 +1,1277 @@
+openapi: 3.0.0
+info:
+  title: AuraOS Waiter App API
+  description: Complete API specification for the AuraOS Waiter App
+  version: 1.0.0
+  contact:
+    name: AuraOS Team
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+  - url: https://api.auraos.local/api/v1
+    description: Production
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login endpoint
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Invalid credentials"
+            code:
+              type: string
+              example: "UNAUTHORIZED"
+        timestamp:
+          type: string
+          format: date-time
+
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - name
+        - role
+        - restaurant_id
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, WAITER, RECEPTION, KITCHEN]
+        restaurant_id:
+          type: string
+          format: uuid
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AuthResponse:
+      type: object
+      required:
+        - token
+        - refreshToken
+        - user
+      properties:
+        token:
+          type: string
+          description: JWT access token (valid for 15 minutes)
+        refreshToken:
+          type: string
+          description: Refresh token (valid for 7 days)
+        user:
+          $ref: '#/components/schemas/User'
+
+    Table:
+      type: object
+      required:
+        - id
+        - table_number
+        - seats
+        - restaurant_id
+      properties:
+        id:
+          type: string
+          format: uuid
+        restaurant_id:
+          type: string
+          format: uuid
+        table_number:
+          type: string
+          example: "T1"
+        seats:
+          type: integer
+          minimum: 1
+          maximum: 20
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TableWithStatus:
+      allOf:
+        - $ref: '#/components/schemas/Table'
+        - type: object
+          properties:
+            active_order_id:
+              type: string
+              format: uuid
+              nullable: true
+            status:
+              type: string
+              enum: [available, occupied]
+
+    MenuCategory:
+      type: object
+      required:
+        - id
+        - restaurant_id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        restaurant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Beverages"
+        description:
+          type: string
+          nullable: true
+        display_order:
+          type: integer
+          default: 0
+        is_active:
+          type: boolean
+          default: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ModifierOption:
+      type: object
+      required:
+        - id
+        - name
+        - price_adjustment
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Extra Large"
+        price_adjustment:
+          type: number
+          format: decimal
+          example: 50.00
+        sort_order:
+          type: integer
+
+    ModifierGroup:
+      type: object
+      required:
+        - id
+        - name
+        - selection_type
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Size"
+        selection_type:
+          type: string
+          enum: [single, multiple]
+          description: "single for radio buttons, multiple for checkboxes"
+        min_select:
+          type: integer
+          default: 0
+        max_select:
+          type: integer
+          default: 1
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModifierOption'
+
+    MenuItem:
+      type: object
+      required:
+        - id
+        - restaurant_id
+        - category_id
+        - name
+        - price
+      properties:
+        id:
+          type: string
+          format: uuid
+        restaurant_id:
+          type: string
+          format: uuid
+        category_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Latte"
+        description:
+          type: string
+          nullable: true
+        price:
+          type: number
+          format: decimal
+          example: 120.00
+        prep_time_minutes:
+          type: integer
+          minimum: 1
+        is_vegetarian:
+          type: boolean
+          default: false
+        is_active:
+          type: boolean
+          default: true
+        display_order:
+          type: integer
+          default: 0
+        modifier_groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModifierGroup'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    OrderItemModifier:
+      type: object
+      required:
+        - id
+        - modifier_group_id
+        - modifier_group_name
+        - modifier_option_id
+        - modifier_option_name
+        - price_adjustment
+      properties:
+        id:
+          type: string
+          format: uuid
+        modifier_group_id:
+          type: string
+          format: uuid
+        modifier_group_name:
+          type: string
+          example: "Size"
+        modifier_option_id:
+          type: string
+          format: uuid
+        modifier_option_name:
+          type: string
+          example: "Large"
+        price_adjustment:
+          type: number
+          format: decimal
+
+    OrderItem:
+      type: object
+      required:
+        - id
+        - order_id
+        - menu_item_id
+        - quantity
+        - unit_price
+      properties:
+        id:
+          type: string
+          format: uuid
+        order_id:
+          type: string
+          format: uuid
+        menu_item_id:
+          type: string
+          format: uuid
+        menu_item_name:
+          type: string
+          example: "Latte"
+        quantity:
+          type: integer
+          minimum: 1
+        unit_price:
+          type: number
+          format: decimal
+        special_instructions:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [PENDING, PREPARING, DONE]
+        modifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemModifier'
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Order:
+      type: object
+      required:
+        - id
+        - restaurant_id
+        - order_number
+        - order_type
+        - order_source
+        - status
+        - total_amount
+      properties:
+        id:
+          type: string
+          format: uuid
+        restaurant_id:
+          type: string
+          format: uuid
+        table_id:
+          type: string
+          format: uuid
+          nullable: true
+        table:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            table_number:
+              type: string
+          nullable: true
+        order_number:
+          type: string
+          example: "ORD-001"
+        token_number:
+          type: string
+          nullable: true
+        order_type:
+          type: string
+          enum: [DINE_IN, PARCEL, ONLINE]
+        order_source:
+          type: string
+          enum: [WAITER, RECEPTION, QR, WHATSAPP, ZOMATO]
+        status:
+          type: string
+          enum: [CREATED, ACCEPTED, PREPARING, READY, COMPLETED, CANCELLED]
+        total_amount:
+          type: number
+          format: decimal
+        priority_score:
+          type: integer
+          default: 0
+        special_instructions:
+          type: string
+          nullable: true
+        order_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+          description: "Alias for order_items"
+        created_by:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Payment:
+      type: object
+      required:
+        - id
+        - restaurant_id
+        - order_id
+        - amount
+        - method
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        restaurant_id:
+          type: string
+          format: uuid
+        order_id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        method:
+          type: string
+          enum: [CASH, CARD, UPI, ONLINE]
+        status:
+          type: string
+          enum: [PENDING, PAID, REFUNDED]
+        reference_number:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PaginatedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+        pagination:
+          type: object
+          properties:
+            limit:
+              type: integer
+            offset:
+              type: integer
+            total:
+              type: integer
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      summary: Login user
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john@restaurant.local"
+                password:
+                  type: string
+                  format: password
+                  example: "securepassword123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          token:
+                            type: string
+                          refreshToken:
+                            type: string
+        '401':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      summary: Get current user profile
+      tags: [Authentication]
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: Logout user
+      tags: [Authentication]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /tables:
+    get:
+      summary: List all tables in restaurant
+      tags: [Tables]
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Tables list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Table'
+
+  /tables/with-status:
+    get:
+      summary: Get tables with occupancy status
+      tags: [Tables]
+      responses:
+        '200':
+          description: Tables with status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TableWithStatus'
+
+  /tables/{id}:
+    get:
+      summary: Get specific table
+      tags: [Tables]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Table details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Table'
+        '404':
+          description: Table not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /menus:
+    get:
+      summary: Get complete menu for restaurant
+      tags: [Menu]
+      responses:
+        '200':
+          description: Complete menu with categories and items
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          categories:
+                            type: array
+                            items:
+                              allOf:
+                                - $ref: '#/components/schemas/MenuCategory'
+                                - type: object
+                                  properties:
+                                    items:
+                                      type: array
+                                      items:
+                                        $ref: '#/components/schemas/MenuItem'
+
+  /menus/categories:
+    get:
+      summary: Get menu categories
+      tags: [Menu]
+      responses:
+        '200':
+          description: Menu categories
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MenuCategory'
+
+  /menus/categories/{id}:
+    get:
+      summary: Get specific category
+      tags: [Menu]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Category with items
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/MenuCategory'
+                          - type: object
+                            properties:
+                              items:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/MenuItem'
+
+  /menus/items:
+    get:
+      summary: Get all menu items
+      tags: [Menu]
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Menu items list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MenuItem'
+
+  /menus/items/{id}:
+    get:
+      summary: Get specific menu item
+      tags: [Menu]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Menu item with modifiers
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MenuItem'
+
+  /orders:
+    post:
+      summary: Create new order
+      tags: [Orders]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - order_type
+                - order_source
+                - items
+              properties:
+                table_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                  description: Required for DINE_IN orders
+                order_type:
+                  type: string
+                  enum: [DINE_IN, PARCEL, ONLINE]
+                order_source:
+                  type: string
+                  enum: [WAITER, RECEPTION, QR, WHATSAPP, ZOMATO]
+                special_instructions:
+                  type: string
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - menu_item_id
+                      - quantity
+                    properties:
+                      menu_item_id:
+                        type: string
+                        format: uuid
+                      quantity:
+                        type: integer
+                        minimum: 1
+                      special_instructions:
+                        type: string
+                      modifiers:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - modifier_option_id
+                          properties:
+                            modifier_option_id:
+                              type: string
+                              format: uuid
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          order:
+                            $ref: '#/components/schemas/Order'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: List orders in restaurant
+      tags: [Orders]
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [CREATED, ACCEPTED, PREPARING, READY, COMPLETED, CANCELLED]
+      responses:
+        '200':
+          description: Orders list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Order'
+
+  /orders/{id}:
+    get:
+      summary: Get specific order
+      tags: [Orders]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      summary: Update order status
+      tags: [Orders]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [ACCEPTED, PREPARING, READY, COMPLETED, CANCELLED]
+                special_instructions:
+                  type: string
+      responses:
+        '200':
+          description: Order updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+
+    put:
+      summary: Update order (PUT alternative)
+      tags: [Orders]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [ACCEPTED, PREPARING, READY, COMPLETED, CANCELLED]
+                special_instructions:
+                  type: string
+      responses:
+        '200':
+          description: Order updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+
+  /orders/{id}/items:
+    post:
+      summary: Add items to existing order
+      tags: [Orders]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+              properties:
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - menu_item_id
+                      - quantity
+                    properties:
+                      menu_item_id:
+                        type: string
+                        format: uuid
+                      quantity:
+                        type: integer
+                        minimum: 1
+                      special_instructions:
+                        type: string
+                      modifiers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            modifier_option_id:
+                              type: string
+                              format: uuid
+      responses:
+        '200':
+          description: Items added to order
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          order:
+                            $ref: '#/components/schemas/Order'
+
+  /orders/active/by-table/{tableId}:
+    get:
+      summary: Get active order for a table
+      tags: [Orders]
+      parameters:
+        - in: path
+          name: tableId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Active order or null
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        oneOf:
+                          - $ref: '#/components/schemas/Order'
+                          - type: 'null'
+
+  /payments:
+    post:
+      summary: Create payment for order
+      tags: [Payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - order_id
+                - amount
+                - method
+              properties:
+                order_id:
+                  type: string
+                  format: uuid
+                amount:
+                  type: number
+                  format: decimal
+                  example: 450.00
+                method:
+                  type: string
+                  enum: [CASH, CARD, UPI, ONLINE]
+                reference_number:
+                  type: string
+      responses:
+        '201':
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Payment'
+
+    get:
+      summary: List payments in restaurant
+      tags: [Payments]
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Payments list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Payment'
+
+  /payments/{id}:
+    get:
+      summary: Get specific payment
+      tags: [Payments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Payment'
+
+    patch:
+      summary: Update payment
+      tags: [Payments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: decimal
+                method:
+                  type: string
+                  enum: [CASH, CARD, UPI, ONLINE]
+                status:
+                  type: string
+                  enum: [PENDING, PAID, REFUNDED]
+                reference_number:
+                  type: string
+      responses:
+        '200':
+          description: Payment updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Payment'
+
+tags:
+  - name: Authentication
+    description: User login and token management
+  - name: Tables
+    description: Table management and status
+  - name: Menu
+    description: Menu categories and items
+  - name: Orders
+    description: Order creation and management
+  - name: Payments
+    description: Payment processing
