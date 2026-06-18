@@ -46,6 +46,7 @@ const STORAGE_KEY = 'auraos_cart';
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   // Hydrate from localStorage once on mount.
   useEffect(() => {
@@ -55,15 +56,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
+    setHydrated(true);
   }, []);
 
+  // Persist — but ONLY after hydration, so the initial empty state can't
+  // overwrite a saved cart before localStorage has been read (StrictMode race).
   useEffect(() => {
+    if (!hydrated) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
     } catch {
       /* ignore */
     }
-  }, [lines]);
+  }, [lines, hydrated]);
 
   const api = useMemo<CartState>(() => {
     const add: CartState['add'] = (line, qty = 1) => {

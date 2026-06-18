@@ -38,3 +38,52 @@ export const deliveryZoneApi = {
     api.patch(`/delivery-zones/${id}`, data),
   remove: (id: string) => api.delete(`/delivery-zones/${id}`),
 }
+
+export interface Coupon {
+  id: string
+  code: string
+  description: string | null
+  discount_type: 'FLAT' | 'PERCENT'
+  discount_value: number
+  min_order: number
+  max_discount: number | null
+  usage_limit: number | null
+  used_count: number
+  valid_until: string | null
+  is_active: boolean
+}
+
+export const couponApi = {
+  list: () => api.get('/coupons'),
+  create: (data: Partial<Coupon>) => api.post('/coupons', data),
+  update: (id: string, data: Partial<Coupon>) => api.patch(`/coupons/${id}`, data),
+  remove: (id: string) => api.delete(`/coupons/${id}`),
+}
+
+export interface OwnerReview {
+  id: string
+  rating: number
+  title: string | null
+  body: string | null
+  is_published: boolean
+  created_at: string
+  customer_name: string | null
+}
+
+export const reviewApi = {
+  list: () => api.get('/reviews'),
+  setPublished: (id: string, is_published: boolean) =>
+    api.patch(`/reviews/${id}`, { is_published }),
+  remove: (id: string) => api.delete(`/reviews/${id}`),
+}
+
+export interface LoyaltyConfig {
+  loyalty_enabled: boolean
+  loyalty_points_per_currency: number
+  loyalty_redeem_value: number
+}
+
+export const loyaltyApi = {
+  getConfig: () => api.get('/loyalty/config'),
+  updateConfig: (data: Partial<LoyaltyConfig>) => api.patch('/loyalty/config', data),
+}

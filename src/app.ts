@@ -18,6 +18,9 @@ import siteRoutes from '@/modules/public/site.routes';
 import customersRoutes from '@/modules/customers/customers.routes';
 import reservationsRoutes, { publicReservationsRouter } from '@/modules/reservations/reservations.routes';
 import deliveryZonesRoutes, { publicDeliveryRouter } from '@/modules/delivery/delivery.routes';
+import couponsRoutes, { publicCouponRouter } from '@/modules/coupons/coupons.routes';
+import engagementRoutes from '@/modules/customers/engagement.routes';
+import { ownerReviewsRouter, loyaltyConfigRouter } from '@/modules/loyalty/owner.routes';
 import paymentWebhookRoutes from '@/modules/payments/payments.webhook';
 import onboardingRoutes from '@/modules/onboarding/onboarding.routes';
 import adminRoutes from '@/modules/admin/admin.routes';
@@ -88,9 +91,14 @@ export function createApp(): Express {
   app.use('/api/v1/public', siteRoutes);     // No auth — public website (branding/theme/hours/gallery/pages)
   app.use('/api/v1/public', publicReservationsRouter); // No auth — customer table booking
   app.use('/api/v1/public', publicDeliveryRouter);     // No auth — delivery fee quote
+  app.use('/api/v1/public', publicCouponRouter);       // No auth — coupon validation
   app.use('/api/v1/customers', customersRoutes); // Customer OTP auth + profile/addresses/history
+  app.use('/api/v1/customers', engagementRoutes); // Customer loyalty + favorites + reviews
   app.use('/api/v1/reservations', reservationsRoutes);   // Owner — manage bookings
   app.use('/api/v1/delivery-zones', deliveryZonesRoutes); // Owner — manage delivery zones
+  app.use('/api/v1/coupons', couponsRoutes);             // Owner — manage coupons
+  app.use('/api/v1/reviews', ownerReviewsRouter);        // Owner — moderate reviews
+  app.use('/api/v1/loyalty', loyaltyConfigRouter);       // Owner — loyalty settings
   app.use('/api/v1/webhooks/payments', paymentWebhookRoutes); // No auth — gateway webhooks
   app.use('/api/v1/onboarding', onboardingRoutes);  // No auth — new restaurant signup
   app.use('/api/v1/admin', adminRoutes);           // Mixed auth — public contact + super-admin management

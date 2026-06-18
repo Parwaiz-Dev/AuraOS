@@ -70,6 +70,8 @@ export interface PlaceOrderPayload {
   payment_method?: 'CASH' | 'CARD' | 'UPI' | 'ONLINE';
   notes?: string;
   delivery_address_id?: string | null;
+  coupon_code?: string;
+  redeem_points?: number;
   items: PlaceOrderItem[];
 }
 export interface PlaceOrderResult {
@@ -142,4 +144,36 @@ export function getDeliveryQuote(slug: string, pincode: string) {
   return req<DeliveryQuote>(
     `/public/site/${encodeURIComponent(slug)}/delivery-quote?pincode=${encodeURIComponent(pincode)}`,
   );
+}
+
+// ── Coupons ────────────────────────────────────────────────────────────────────
+export interface CouponResult {
+  valid: boolean;
+  discount: number;
+  code?: string;
+  message?: string;
+}
+export function validateCoupon(slug: string, code: string, orderTotal: number) {
+  return req<CouponResult>(`/public/site/${encodeURIComponent(slug)}/coupon/validate`, {
+    method: 'POST',
+    body: JSON.stringify({ code, order_total: orderTotal }),
+  });
+}
+
+// ── Loyalty ────────────────────────────────────────────────────────────────────
+export interface LoyaltyInfo {
+  balance: number;
+  ledger: Array<{ points: number; reason: string; created_at: string }>;
+}
+export function getLoyalty(slug: string) {
+  return req<LoyaltyInfo>(`/customers/me/loyalty?slug=${encodeURIComponent(slug)}`, { auth: true });
+}
+
+// ── Reviews ────────────────────────────────────────────────────────────────────
+export function submitReview(slug: string, payload: { rating: number; title?: string; body?: string }) {
+  return req<{ id: string }>(`/customers/me/reviews`, {
+    method: 'POST',
+    auth: true,
+    body: JSON.stringify({ slug, ...payload }),
+  });
 }

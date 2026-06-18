@@ -181,6 +181,8 @@ const GuestOrderSchema = z.object({
   // Common
   notes: z.string().max(500).optional(),
   delivery_address_id: z.string().uuid().optional().nullable(),
+  coupon_code: z.string().max(40).optional(),
+  redeem_points: z.number().int().min(0).optional(),
   items: z
     .array(
       z.object({
@@ -291,7 +293,61 @@ router.post('/order/:slug', publicOrderRateLimiter, async (req: Request, res: Re
       });
     }
 
-    const totalAmount = orderItems.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
+    const itemsTotal = orderItems.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
+
+    // ── Resolve logged-in customer (if any) up front — needed for loyalty ────
+    let resolvedCustomerId: string | null = null;
+    let resolvedCustomerPhone: string | null = null;
+    {
+      const authHeader = req.headers.authorization;
+      if (authHeader?.startsWith('Bearer ')) {
+        try {
+          const { verifyCustomerToken } = await import('@/modules/customers/customer-auth.service');
+          const c = verifyCustomerToken(authHeader.substring(7));
+          resolvedCustomerId = c.customerId;
+          resolvedCustomerPhone = c.phone;
+        } catch { /* guest */ }
+      }
+    }
+
+    // ── Apply coupon discount (validation only; consumed after order create) ──
+    let couponDiscount = 0;
+    let appliedCouponId: string | null = null;
+    if (payload.coupon_code) {
+      const { computeCouponDiscount } = await import('@/modules/coupons/coupons.routes');
+      const c = await query(
+        `SELECT * FROM coupons WHERE restaurant_id = $1 AND UPPER(code) = UPPER($2) LIMIT 1`,
+        [restaurantId, payload.coupon_code],
+      );
+      if (c.rows.length > 0) {
+        const result = computeCouponDiscount(c.rows[0], itemsTotal);
+        if (result.valid) { couponDiscount = result.discount; appliedCouponId = c.rows[0].id; }
+      }
+    }
+
+    // ── Apply loyalty redemption (capped to remaining balance after coupon) ──
+    let loyaltyDiscount = 0;
+    let loyaltyPointsToSpend = 0;
+    if (resolvedCustomerId && payload.redeem_points && payload.redeem_points > 0) {
+      const cfg = await query(
+        `SELECT loyalty_enabled, loyalty_redeem_value FROM restaurants WHERE id = $1`,
+        [restaurantId],
+      );
+      if (cfg.rows[0]?.loyalty_enabled) {
+        const redeemValue = Number(cfg.rows[0].loyalty_redeem_value);
+        const acct = await query(
+          `SELECT points_balance FROM loyalty_accounts WHERE restaurant_id = $1 AND customer_id = $2`,
+          [restaurantId, resolvedCustomerId],
+        );
+        const balance = acct.rows[0]?.points_balance ?? 0;
+        const maxValue = Math.max(0, itemsTotal - couponDiscount);
+        const maxPointsByValue = Math.floor(maxValue / redeemValue);
+        loyaltyPointsToSpend = Math.min(payload.redeem_points, balance, maxPointsByValue);
+        loyaltyDiscount = Math.round(loyaltyPointsToSpend * redeemValue * 100) / 100;
+      }
+    }
+
+    const totalAmount = Math.max(0, itemsTotal - couponDiscount - loyaltyDiscount);
 
     // Validate table_id belongs to this restaurant
     if (payload.table_id) {
@@ -348,22 +404,51 @@ router.post('/order/:slug', publicOrderRateLimiter, async (req: Request, res: Re
       tokenNumber,
     );
 
-    // ── Optional: link this order to a logged-in customer ────────────────
-    // If a customer Bearer token is present, attach customer_id/phone and the
-    // delivery address so it shows in their order history. Guests skip this.
-    try {
-      const authHeader = req.headers.authorization;
-      if (authHeader?.startsWith('Bearer ')) {
-        const { verifyCustomerToken } = await import('@/modules/customers/customer-auth.service');
-        const customer = verifyCustomerToken(authHeader.substring(7));
+    // ── Link customer + apply loyalty/coupon side-effects ────────────────
+    // Uses the customer resolved earlier. Coupon consumption, loyalty redeem,
+    // and loyalty earn run in one tenant transaction so balances never drift.
+    if (resolvedCustomerId) {
+      try {
         await query(
           `UPDATE orders SET customer_id = $1, customer_phone = $2, delivery_address_id = $3
            WHERE id = $4 AND restaurant_id = $5`,
-          [customer.customerId, customer.phone, (payload as any).delivery_address_id ?? null, order.id, restaurantId],
+          [resolvedCustomerId, resolvedCustomerPhone, payload.delivery_address_id ?? null, order.id, restaurantId],
         );
-      }
-    } catch {
-      // Invalid/expired customer token → treat as guest order, do not fail.
+      } catch { /* non-fatal */ }
+    }
+
+    try {
+      const { withTenant } = await import('@/config/database');
+      await withTenant(restaurantId, async (q) => {
+        // Consume the coupon (best-effort increment with usage-limit guard).
+        if (appliedCouponId) {
+          await q(
+            `UPDATE coupons SET used_count = used_count + 1, updated_at = NOW()
+             WHERE id = $1 AND (usage_limit IS NULL OR used_count < usage_limit)`,
+            [appliedCouponId],
+          );
+        }
+        if (resolvedCustomerId) {
+          const { earnPoints, redeemPoints } = await import('@/modules/loyalty/loyalty.service');
+          const cfg = await q(
+            `SELECT loyalty_enabled, loyalty_points_per_currency, loyalty_redeem_value
+             FROM restaurants WHERE id = $1`,
+            [restaurantId],
+          );
+          const row = cfg.rows[0];
+          if (row?.loyalty_enabled) {
+            if (loyaltyPointsToSpend > 0) {
+              await redeemPoints(q, restaurantId, resolvedCustomerId, order.id,
+                loyaltyPointsToSpend, Number(row.loyalty_redeem_value), loyaltyDiscount);
+            }
+            // Earn on the amount actually paid.
+            await earnPoints(q, restaurantId, resolvedCustomerId, order.id,
+              totalAmount, Number(row.loyalty_points_per_currency));
+          }
+        }
+      });
+    } catch (err) {
+      console.error('[loyalty/coupon] post-order processing failed (order still placed):', err);
     }
 
     // ── Save modifier selections for each order item ─────────────────────

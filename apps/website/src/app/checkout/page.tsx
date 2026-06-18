@@ -33,6 +33,12 @@ export default function CheckoutPage() {
   const [quote, setQuote] = useState<import('@/lib/client').DeliveryQuote | null>(null);
   const [quoteBusy, setQuoteBusy] = useState(false);
 
+  // Coupon
+  const [couponCode, setCouponCode] = useState('');
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponMsg, setCouponMsg] = useState<string | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
+
   async function checkPincode() {
     if (pincode.length < 4) return;
     setQuoteBusy(true); setError(null);
@@ -43,7 +49,27 @@ export default function CheckoutPage() {
   }
 
   const deliveryFee = quote?.deliverable ? quote.fee ?? 0 : 0;
-  const grandTotal = total + deliveryFee;
+  const grandTotal = Math.max(0, total - couponDiscount) + deliveryFee;
+
+  async function applyCoupon() {
+    if (!couponCode.trim()) return;
+    setCouponBusy(true); setCouponMsg(null);
+    try {
+      const { validateCoupon } = await import('@/lib/client');
+      const r = await validateCoupon(slug, couponCode.trim(), total);
+      if (r.valid) {
+        setCouponDiscount(r.discount);
+        setCouponMsg(`Applied: −₹${r.discount.toFixed(0)}`);
+      } else {
+        setCouponDiscount(0);
+        setCouponMsg(r.message || 'Invalid coupon');
+      }
+    } catch (e) {
+      setCouponMsg((e as Error).message);
+    } finally {
+      setCouponBusy(false);
+    }
+  }
 
   // Skip login if already authenticated.
   useEffect(() => {
@@ -81,6 +107,7 @@ export default function CheckoutPage() {
         customer_phone: phone || undefined,
         payment_method: payment,
         notes: notes || undefined,
+        coupon_code: couponDiscount > 0 ? couponCode.trim() : undefined,
         items: lines.map((l) => ({
           menu_item_id: l.menu_item_id,
           quantity: l.quantity,
@@ -121,11 +148,48 @@ export default function CheckoutPage() {
     <main className="mx-auto w-full max-w-md flex-1 px-6 py-12">
       <h1 className="mb-6 text-2xl font-bold" style={{ color: 'var(--brand-primary)' }}>Checkout</h1>
 
-      <div className="mb-6 rounded-xl border p-4 text-sm">
-        <div className="flex justify-between font-semibold">
-          <span>Total ({lines.length} items)</span>
-          <span style={{ color: 'var(--brand-accent)' }}>₹{total.toFixed(0)}</span>
+      <div className="mb-6 space-y-2 rounded-xl border p-4 text-sm">
+        <div className="flex justify-between">
+          <span>Subtotal ({lines.length} items)</span>
+          <span>₹{total.toFixed(0)}</span>
         </div>
+        {couponDiscount > 0 ? (
+          <div className="flex justify-between text-emerald-700">
+            <span>Coupon discount</span>
+            <span>−₹{couponDiscount.toFixed(0)}</span>
+          </div>
+        ) : null}
+        {deliveryFee > 0 ? (
+          <div className="flex justify-between">
+            <span>Delivery</span>
+            <span>₹{deliveryFee.toFixed(0)}</span>
+          </div>
+        ) : null}
+        <div className="flex justify-between border-t pt-2 font-bold">
+          <span>Total</span>
+          <span style={{ color: 'var(--brand-accent)' }}>₹{grandTotal.toFixed(0)}</span>
+        </div>
+
+        {/* Coupon */}
+        <div className="flex gap-2 pt-2">
+          <input
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+            placeholder="Coupon code"
+            className="flex-1 rounded-lg border px-3 py-1.5 text-sm uppercase"
+          />
+          <button
+            onClick={applyCoupon}
+            disabled={couponBusy || !couponCode.trim()}
+            className="rounded-lg px-4 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+            style={{ backgroundColor: 'var(--brand-primary)' }}
+          >
+            {couponBusy ? '…' : 'Apply'}
+          </button>
+        </div>
+        {couponMsg ? (
+          <p className={`text-xs ${couponDiscount > 0 ? 'text-emerald-700' : 'text-red-600'}`}>{couponMsg}</p>
+        ) : null}
       </div>
 
       {error ? <p className="mb-4 rounded bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}

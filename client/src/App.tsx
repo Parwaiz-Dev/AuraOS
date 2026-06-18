@@ -30,6 +30,9 @@ import OwnerDashboard from './pages/OwnerDashboard'
 import MultiOutlet from './pages/MultiOutlet'
 import Reservations from './pages/Reservations'
 import DeliveryZones from './pages/DeliveryZones'
+import Coupons from './pages/Coupons'
+import Reviews from './pages/Reviews'
+import Loyalty from './pages/Loyalty'
 import Features from './pages/Features'
 import Monitoring from './pages/Monitoring'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -178,6 +181,27 @@ function App() {
                 <ProtectedRoute roles={['ADMIN']}>
                   <Layout>
                     <DeliveryZones />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/coupons" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <Coupons />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/reviews" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <Reviews />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/loyalty" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <Loyalty />
                   </Layout>
                 </ProtectedRoute>
               } />

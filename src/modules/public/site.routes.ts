@@ -145,4 +145,36 @@ router.get('/site/:slug/order/:orderNumber', async (req: Request, res: Response,
   }
 });
 
+// ─── GET /public/site/:slug/reviews ─────────────────────────────────────────
+// Published reviews + aggregate rating for the website's reviews section.
+router.get('/site/:slug/reviews', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const restaurant = await getRestaurantBySlug(req.params.slug);
+    if (!restaurant) throw new NotFoundError('Restaurant not found');
+
+    const [list, summary] = await Promise.all([
+      query(
+        `SELECT r.id, r.rating, r.title, r.body, r.photo_urls, r.created_at, c.name AS customer_name
+         FROM reviews r LEFT JOIN customers c ON c.id = r.customer_id
+         WHERE r.restaurant_id = $1 AND r.is_published = TRUE
+         ORDER BY r.created_at DESC LIMIT 50`,
+        [restaurant.id],
+      ),
+      query(
+        `SELECT COUNT(*)::int AS count, COALESCE(AVG(rating), 0)::numeric(3,2) AS average
+         FROM reviews WHERE restaurant_id = $1 AND is_published = TRUE`,
+        [restaurant.id],
+      ),
+    ]);
+
+    res.json(successResponse({
+      reviews: list.rows,
+      count: summary.rows[0].count,
+      average: Number(summary.rows[0].average),
+    }));
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;
