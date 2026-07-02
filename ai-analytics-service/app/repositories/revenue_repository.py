@@ -71,10 +71,11 @@ async def fetch_weekly_revenue(
     limit: int = 52,
 ) -> list[dict]:
     """Return weekly revenue rows: week_start, week_end, revenue, order_count."""
-    week_start = func.date_trunc("week", Order.completed_at).label("week_start")
-    # week_end = week_start + 6 days
-    week_end = (func.date_trunc("week", Order.completed_at)
-                + text("INTERVAL '6 days'")).label("week_end")
+    # Use text() for the literal to avoid parameterization mismatch between
+    # SELECT and GROUP BY (PostgreSQL can't determine $1 = $6).
+    _week_trunc = func.date_trunc(text("'week'"), Order.completed_at)
+    week_start = _week_trunc.label("week_start")
+    week_end = (_week_trunc + text("INTERVAL '6 days'")).label("week_end")
 
     cols = [
         week_start,
@@ -95,8 +96,8 @@ async def fetch_weekly_revenue(
         stmt = stmt.where(Order.completed_at <= end_date)
 
     stmt = (
-        stmt.group_by(func.date_trunc("week", Order.completed_at))
-        .order_by(func.date_trunc("week", Order.completed_at).desc())
+        stmt.group_by(_week_trunc)
+        .order_by(_week_trunc.desc())
         .limit(limit)
     )
 
@@ -127,8 +128,11 @@ async def fetch_monthly_revenue(
     limit: int = 36,
 ) -> list[dict]:
     """Return monthly revenue rows: month (YYYY-MM), revenue, order_count."""
+    # Use text() for the literal to avoid parameterization mismatch between
+    # SELECT and GROUP BY (PostgreSQL can't determine $1 = $6).
+    _month_trunc = func.date_trunc(text("'month'"), Order.completed_at)
     cols = [
-        func.to_char(func.date_trunc("month", Order.completed_at), "YYYY-MM").label("month"),
+        func.to_char(_month_trunc, text("'YYYY-MM'")).label("month"),
         func.coalesce(func.sum(Order.total_amount), 0).label("revenue"),
         func.count(Order.id).label("order_count"),
     ]
@@ -145,8 +149,8 @@ async def fetch_monthly_revenue(
         stmt = stmt.where(Order.completed_at <= end_date)
 
     stmt = (
-        stmt.group_by(func.date_trunc("month", Order.completed_at))
-        .order_by(func.date_trunc("month", Order.completed_at).desc())
+        stmt.group_by(_month_trunc)
+        .order_by(_month_trunc.desc())
         .limit(limit)
     )
 

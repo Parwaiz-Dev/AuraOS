@@ -37,6 +37,20 @@ pytest==8.3.4
 pytest-asyncio==0.25.0
 httpx==0.28.1
 
+# ── RAG / NLP (Milestone 7) ────────────────────────────────────────────────────
+sentence-transformers==3.3.1
+PyPDF2==3.0.1
+
+# ── RAG persistent vector backends (Milestone 7 — optional) ─────────────────────
+# Install only when RAG_VECTOR_DB is set to 'qdrant' or 'pgvector'.
+# The default 'in_memory' backend requires neither.
+# qdrant-client==1.12.1
+# pgvector==0.3.6
+
+# ── Multi-Agent System (Milestone 8) ────────────────────────────────────────────
+langgraph==0.2.76
+langchain-core==0.3.86
+
 # ── Utilities ───────────────────────────────────────────────────────────────────
 python-dotenv==1.0.1
 tenacity==9.0.0

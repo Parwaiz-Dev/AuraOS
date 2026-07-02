@@ -33,6 +33,22 @@ import {
   TagIcon,
   ChevronUpDownIcon,
   CheckIcon,
+  SparklesIcon,
+  ChatBubbleLeftRightIcon,
+  PresentationChartLineIcon,
+  UserGroupIcon,
+  LightBulbIcon,
+  ArchiveBoxIcon,
+  ClockIcon,
+  DocumentChartBarIcon,
+  CpuChipIcon,
+  BoltIcon,
+  ArrowPathIcon,
+  ShieldCheckIcon,
+  CircleStackIcon,
+  BookmarkSquareIcon,
+  HeartIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline'
 import { TicketIcon, StarIcon, GiftIcon } from '@heroicons/react/24/outline'
 import { cn } from '../lib/utils'
@@ -44,8 +60,9 @@ interface NavItem {
   roles?: string[]
   badge?: number
   superAdmin?: boolean
-  featureKey?: string  // hide when this feature is disabled
-  restaurantTypes?: RestaurantType[]  // only show for these restaurant types
+  featureKey?: string
+  restaurantTypes?: RestaurantType[]
+  section?: string
 }
 
 const navItems: NavItem[] = [
@@ -69,6 +86,22 @@ const navItems: NavItem[] = [
   { name: 'Zomato',           href: '/zomato-settings',    icon: BuildingStorefrontIcon,   roles: ['ADMIN'], featureKey: 'zomato' },
   { name: 'Subscription',     href: '/subscription',       icon: CreditCardIcon,           roles: ['ADMIN'] },
   { name: 'Features',         href: '/features',           icon: Cog6ToothIcon,            roles: ['ADMIN'] },
+  // AI Analytics
+  { name: 'AI Dashboard',     href: '/ai',                 icon: SparklesIcon,             roles: ['ADMIN'], section: 'AI Analytics' },
+  { name: 'AI Copilot',       href: '/ai/copilot',         icon: ChatBubbleLeftRightIcon,  roles: ['ADMIN'] },
+  { name: 'Forecasts',        href: '/ai/forecasts',       icon: PresentationChartLineIcon,roles: ['ADMIN'] },
+  { name: 'Customer Insights',href: '/ai/customers',       icon: UserGroupIcon,            roles: ['ADMIN'] },
+  { name: 'Recommendations',  href: '/ai/recommendations', icon: LightBulbIcon,            roles: ['ADMIN'] },
+  { name: 'Inventory AI',     href: '/ai/inventory',       icon: ArchiveBoxIcon,           roles: ['ADMIN'] },
+  { name: 'Wait Time AI',     href: '/ai/wait-time',       icon: ClockIcon,                roles: ['ADMIN'] },
+  { name: 'AI Reports',       href: '/ai/reports',         icon: DocumentChartBarIcon,     roles: ['ADMIN'] },
+  { name: 'Models',           href: '/ai/models',          icon: CpuChipIcon,              roles: ['ADMIN'] },
+  { name: 'Events',           href: '/ai/events',          icon: BoltIcon,                 roles: ['ADMIN'] },
+  { name: 'Workflows',        href: '/ai/workflows',       icon: ArrowPathIcon,            roles: ['ADMIN'] },
+  { name: 'Autonomous AI',    href: '/ai/autonomy',        icon: ShieldCheckIcon,          roles: ['ADMIN'] },
+  { name: 'Agents',           href: '/ai/agents',          icon: CircleStackIcon,          roles: ['ADMIN'] },
+  { name: 'Knowledge Base',   href: '/ai/knowledge',       icon: BookmarkSquareIcon,       roles: ['ADMIN'] },
+  { name: 'System Health',    href: '/ai/health',          icon: HeartIcon,                roles: ['ADMIN'] },
   { name: 'Platform (Owner)', href: '/owner',              icon: GlobeAltIcon,             superAdmin: true },
   { name: 'Multi Outlet',     href: '/multi-outlet',      icon: BuildingStorefrontIcon,    superAdmin: true },
 ]
@@ -84,6 +117,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [aiMenuOpen, setAiMenuOpen] = useState(() => location.pathname.startsWith('/ai'))
 
   // Restaurant switcher state
   const [switchOpen, setSwitchOpen] = useState(false)
@@ -160,7 +194,58 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           const isActive =
             item.href === '/'
               ? location.pathname === '/'
-              : location.pathname.startsWith(item.href)
+              : item.href === '/ai'
+                ? location.pathname === '/ai'
+                : location.pathname.startsWith(item.href)
+          const isAiSection = item.section === 'AI Analytics'
+          const isAiChild = !item.section && item.href.startsWith('/ai/')
+
+          if (isAiSection) {
+            return (
+              <div key={item.name}>
+                <button
+                  onClick={() => setAiMenuOpen(!aiMenuOpen)}
+                  className="w-full flex items-center gap-3 px-3 py-2 mt-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-navy-400 hover:text-navy-200 transition-colors"
+                >
+                  <SparklesIcon className="w-4 h-4" />
+                  <span className="flex-1 text-left">AI Analytics</span>
+                  <ChevronDownIcon className={cn('w-3.5 h-3.5 transition-transform duration-200', aiMenuOpen && 'rotate-180')} />
+                </button>
+                {aiMenuOpen && (
+                  <Link
+                    to={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn('nav-item relative ml-2', isActive && 'active')}
+                  >
+                    {isActive && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-accent-400" />
+                    )}
+                    <item.icon className={cn('w-5 h-5 shrink-0', isActive ? 'text-accent-400' : 'text-navy-300')} />
+                    <span className="flex-1">Dashboard</span>
+                  </Link>
+                )}
+              </div>
+            )
+          }
+
+          if (isAiChild) {
+            if (!aiMenuOpen) return null
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                onClick={() => setSidebarOpen(false)}
+                className={cn('nav-item relative ml-2', isActive && 'active')}
+              >
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-accent-400" />
+                )}
+                <item.icon className={cn('w-5 h-5 shrink-0', isActive ? 'text-accent-400' : 'text-navy-300')} />
+                <span className="flex-1">{item.name}</span>
+              </Link>
+            )
+          }
+
           return (
             <Link
               key={item.name}

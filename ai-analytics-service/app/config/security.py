@@ -98,3 +98,38 @@ async def decode_token(
 
 # Type alias for endpoint signatures
 CurrentUser = Annotated[TokenPayload, Depends(decode_token)]
+
+
+# ── Role-based access control ─────────────────────────────────────────────────────
+
+# Privileged roles allowed to perform administrative / write operations.
+# OWNER is accepted for forward-compatibility if the Core API ever issues it;
+# ADMIN is the current highest privilege in this service's role enum.
+PRIVILEGED_ROLES: frozenset[str] = frozenset({"OWNER", "ADMIN"})
+
+
+def require_roles(*roles: str):
+    """Build a FastAPI dependency that enforces the caller's role.
+
+    Validates the JWT (via ``decode_token``) and raises 403 if the token's role
+    is not in *roles*. Returns the decoded ``TokenPayload`` on success so the
+    endpoint can still access user/restaurant context.
+
+    Usage::
+
+        RequireOwnerAdmin = Annotated[TokenPayload, Depends(require_roles("OWNER", "ADMIN"))]
+    """
+    allowed = {r.upper() for r in roles}
+
+    async def _dependency(user: TokenPayload = Depends(decode_token)) -> TokenPayload:
+        if (user.role or "").upper() not in allowed:
+            raise ForbiddenError(
+                f"This action requires one of the roles: {', '.join(sorted(allowed))}"
+            )
+        return user
+
+    return _dependency
+
+
+# Dependency for endpoints restricted to OWNER/ADMIN.
+RequireOwnerAdmin = Annotated[TokenPayload, Depends(require_roles(*PRIVILEGED_ROLES))]

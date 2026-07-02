@@ -123,6 +123,7 @@ Response (200):
   "data": {
     "tables": [
       {
+        
         "id": "tbl-001",
         "table_number": 1,
         "capacity": 4,

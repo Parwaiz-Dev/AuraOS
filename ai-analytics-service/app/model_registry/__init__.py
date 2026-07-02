@@ -1,0 +1,1 @@
+"""Model Registry — model lifecycle, versioning, and cleanup."""

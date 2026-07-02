@@ -35,6 +35,21 @@ import Reviews from './pages/Reviews'
 import Loyalty from './pages/Loyalty'
 import Features from './pages/Features'
 import Monitoring from './pages/Monitoring'
+import AIDashboard from './pages/ai/AIDashboard'
+import AICopilot from './pages/ai/AICopilot'
+import AIForecasts from './pages/ai/AIForecasts'
+import AICustomerInsights from './pages/ai/AICustomerInsights'
+import AIRecommendations from './pages/ai/AIRecommendations'
+import AIInventory from './pages/ai/AIInventory'
+import AIWaitTime from './pages/ai/AIWaitTime'
+import AIReports from './pages/ai/AIReports'
+import AIModels from './pages/ai/AIModels'
+import AIEvents from './pages/ai/AIEvents'
+import AIWorkflows from './pages/ai/AIWorkflows'
+import AIAutonomy from './pages/ai/AIAutonomy'
+import AIAgents from './pages/ai/AIAgents'
+import AIKnowledgeBase from './pages/ai/AIKnowledgeBase'
+import AISystemHealth from './pages/ai/AISystemHealth'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 
@@ -216,6 +231,113 @@ function App() {
                 <ProtectedRoute superAdminOnly>
                   <Layout>
                     <Monitoring />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+
+              {/* AI Analytics Routes */}
+              <Route path="/ai" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AIDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/copilot" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AICopilot />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/forecasts" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AIForecasts />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/customers" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AICustomerInsights />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/recommendations" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AIRecommendations />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/inventory" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AIInventory />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/wait-time" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AIWaitTime />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/reports" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AIReports />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/models" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AIModels />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/events" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AIEvents />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/workflows" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AIWorkflows />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/autonomy" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AIAutonomy />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/agents" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AIAgents />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/knowledge" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AIKnowledgeBase />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/ai/health" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <Layout>
+                    <AISystemHealth />
                   </Layout>
                 </ProtectedRoute>
               } />

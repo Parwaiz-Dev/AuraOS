@@ -1,0 +1,1 @@
+"""Background training tasks — called by the scheduler, never by request handlers."""
