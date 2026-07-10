@@ -3,7 +3,6 @@ import { zomatoController } from './zomato.controller';
 import { authenticate } from '@/shared/middleware/authenticate';
 import { authorize } from '@/shared/middleware/authorize';
 import {
-  captureRawBody,
   verifyZomatoSignature,
   requireRestaurantId,
 } from './zomato.middleware';
@@ -12,13 +11,13 @@ const router = Router();
 
 // ── Webhook ───────────────────────────────────────────────────────────────────
 // Middleware chain (order matters):
-//   1. captureRawBody      — reads raw bytes before JSON parsing (needed for HMAC)
-//   2. verifyZomatoSignature — verifies X-Zomato-Signature header
-//   3. requireRestaurantId — validates X-Restaurant-ID header, attaches to req
-//   4. zomatoController.webhook — processes the order
+//   1. verifyZomatoSignature — verifies X-Zomato-Signature over req.rawBody
+//   2. requireRestaurantId — validates X-Restaurant-ID header, attaches to req
+//   3. zomatoController.webhook — processes the order
+// The raw body is captured globally by the express.json({ verify }) hook in
+// app.ts, so req.rawBody is already available for HMAC verification.
 router.post(
   '/webhook',
-  captureRawBody,
   verifyZomatoSignature,
   requireRestaurantId,
   (req, res, next) => zomatoController.webhook(req, res, next),

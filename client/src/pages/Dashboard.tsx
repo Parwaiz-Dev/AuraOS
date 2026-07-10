@@ -76,9 +76,6 @@ const Dashboard: React.FC = () => {
   const { user } = useAuth()
   const { restaurantType } = useFeatures()
 
-  // Super-admins go straight to their platform panel
-  if (user?.isSuperAdmin) return <Navigate to="/owner" replace />
-
   // Determine dashboard cards by restaurant type (default: FULL_SERVICE)
   const cardKeys: DashboardCardKey[] =
     DASHBOARD_CARDS_BY_TYPE[restaurantType || 'FULL_SERVICE']
@@ -133,6 +130,10 @@ const Dashboard: React.FC = () => {
       off('PAYMENT_COMPLETED')
     }
   }, [on, off, fetchAll])
+
+  // Super-admins go straight to their platform panel (placed after all hooks
+  // to avoid a Rules-of-Hooks violation when user state transitions).
+  if (user?.isSuperAdmin) return <Navigate to="/owner" replace />
 
   if (loading) return <Loading text="Loading dashboard…" />
 

@@ -20,6 +20,11 @@ import React from 'react'
 import { Order, OrderItem } from '../types/order'
 import { formatDate } from '../lib/utils'
 
+function esc(s: string | undefined | null): string {
+  if (!s) return ''
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 interface PrintReceiptProps {
   order: Order
   items: OrderItem[]
@@ -53,7 +58,7 @@ export function printReceipt(
       ? `<div style="font-size:10px;color:#555;margin-top:1px;">${mods
           .map((m) => {
             const adj = Number(m.price_adjustment || 0)
-            return `${m.modifier_option_name}${adj > 0 ? ` (+${adj})` : adj < 0 ? ` (${adj})` : ''}`
+            return `${esc(m.modifier_option_name)}${adj > 0 ? ` (+${adj})` : adj < 0 ? ` (${adj})` : ''}`
           })
           .join(', ')}</div>`
       : ''
@@ -63,7 +68,7 @@ export function printReceipt(
       (item) => `
       <tr>
         <td style="padding:3px 0;">
-          ${item.menu_item_name || item.menu_item_id}
+          ${esc(item.menu_item_name || item.menu_item_id)}
           ${fmtMods(item.modifiers)}
         </td>
         <td style="text-align:center;padding:3px 4px;">${item.quantity}</td>
@@ -78,7 +83,7 @@ export function printReceipt(
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Receipt — ${order.order_number}</title>
+      <title>Receipt — ${esc(order.order_number)}</title>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -105,7 +110,7 @@ export function printReceipt(
     </head>
     <body>
       <div class="center">
-        <div class="bold" style="font-size:16px;">${restaurantName}</div>
+        <div class="bold" style="font-size:16px;">${esc(restaurantName)}</div>
         <div style="font-size:10px;margin-top:2px;">BILL / RECEIPT</div>
       </div>
       <div class="divider"></div>
@@ -113,12 +118,12 @@ export function printReceipt(
       <table>
         <tr>
           <td>Order #</td>
-          <td class="right bold">${order.order_number}</td>
+          <td class="right bold">${esc(order.order_number)}</td>
         </tr>
-        ${order.table?.table_number ? `<tr><td>Table</td><td class="right">${order.table.table_number}</td></tr>` : ''}
+        ${order.table?.table_number ? `<tr><td>Table</td><td class="right">${esc(String(order.table.table_number))}</td></tr>` : ''}
         <tr>
           <td>Type</td>
-          <td class="right">${order.order_type}</td>
+          <td class="right">${esc(order.order_type)}</td>
         </tr>
         <tr>
           <td>Date</td>
@@ -126,7 +131,7 @@ export function printReceipt(
         </tr>
         <tr>
           <td>Payment</td>
-          <td class="right">${paymentMethod}</td>
+          <td class="right">${esc(paymentMethod)}</td>
         </tr>
       </table>
 

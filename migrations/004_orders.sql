@@ -1,6 +1,6 @@
 -- 004_orders.sql - Create order management tables (critical state machine)
 
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
     table_id UUID REFERENCES restaurant_tables(id) ON DELETE SET NULL,
@@ -18,15 +18,15 @@ CREATE TABLE orders (
     UNIQUE(restaurant_id, order_number)
 );
 
-CREATE INDEX idx_orders_restaurant_id ON orders(restaurant_id);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_orders_table_id ON orders(table_id);
-CREATE INDEX idx_orders_created_at_desc ON orders(created_at DESC);
-CREATE INDEX idx_orders_restaurant_status ON orders(restaurant_id, status);
-CREATE INDEX idx_orders_priority_score ON orders(priority_score DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_restaurant_id ON orders(restaurant_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_table_id ON orders(table_id);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at_desc ON orders(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_restaurant_status ON orders(restaurant_id, status);
+CREATE INDEX IF NOT EXISTS idx_orders_priority_score ON orders(priority_score DESC);
 
 -- Order items (line items in an order)
-CREATE TABLE order_items (
+CREATE TABLE IF NOT EXISTS order_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
     order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
@@ -40,7 +40,7 @@ CREATE TABLE order_items (
     completed_at TIMESTAMP
 );
 
-CREATE INDEX idx_order_items_restaurant_id ON order_items(restaurant_id);
-CREATE INDEX idx_order_items_order_id ON order_items(order_id);
-CREATE INDEX idx_order_items_menu_item_id ON order_items(menu_item_id);
-CREATE INDEX idx_order_items_status ON order_items(status);
+CREATE INDEX IF NOT EXISTS idx_order_items_restaurant_id ON order_items(restaurant_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_menu_item_id ON order_items(menu_item_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_status ON order_items(status);

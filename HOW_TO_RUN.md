@@ -93,8 +93,7 @@ the backend.
 
 ```powershell
 # From project root
- 
- 
+npm run dev
 ```
 
 This single command starts **everything server-side**:

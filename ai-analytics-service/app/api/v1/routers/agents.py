@@ -19,7 +19,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.config.security import CurrentUser, RequireOwnerAdmin
+from app.config.security import CurrentUser, RequireOwnerAdmin, resolve_tenant_id
 from app.schemas import ErrorResponse
 from app.services.agent_service import (
     get_agent_history,
@@ -101,7 +101,7 @@ async def run_request(
 
     return await run_agent_request(
         request=request_text,
-        restaurant_id=body.get("restaurant_id", user.restaurantId),
+        restaurant_id=resolve_tenant_id(user, body.get("restaurant_id")),
         user_id=user.id,
     )
 

@@ -20,42 +20,39 @@ import { Router, Request, Response } from 'express';
 import { query } from '@/config/database';
 import { verifyWebhookSignature } from './gateways/razorpay.gateway';
 import { eventBroadcaster } from '@/shared/socket/eventBroadcaster';
-import { env } from '@/config/env';
 
 const router = Router();
-
-/**
- * Capture raw body bytes before JSON parsing.
- * Required for HMAC signature verification.
- */
-function captureRawBody(req: Request, res: Response, next: () => void): void {
-  const chunks: Buffer[] = [];
-  req.on('data', (chunk: Buffer) => chunks.push(chunk));
-  req.on('end', () => {
-    (req as any).rawBody = Buffer.concat(chunks);
-    try {
-      req.body = JSON.parse((req as any).rawBody.toString('utf8'));
-    } catch {
-      req.body = {};
-    }
-    next();
-  });
-}
 
 /**
  * POST /api/v1/webhooks/payments/razorpay
  *
  * Razorpay sends this when a payment is captured, failed, or refunded.
+ *
+ * The raw request body is captured globally by the express.json({ verify })
+ * hook in app.ts and exposed as req.rawBody, which we verify the HMAC against.
  */
-router.post('/razorpay', captureRawBody, async (req: Request, res: Response) => {
+router.post('/razorpay', async (req: Request, res: Response) => {
   try {
-    const signature = req.headers['x-razorpay-signature'] as string;
-    const rawBody: Buffer = (req as any).rawBody;
+    const signature = req.headers['x-razorpay-signature'] as string | undefined;
+    const rawBody: Buffer | undefined = (req as unknown as { rawBody?: Buffer }).rawBody;
 
-    // Verify signature before doing any work
-    if (signature && !verifyWebhookSignature(rawBody, signature)) {
-      console.warn('[Razorpay Webhook] Invalid signature — ignoring');
-      res.status(200).json({ received: true });
+    // Fail closed: a webhook with no signature header is never trusted.
+    if (!signature) {
+      console.warn('[Razorpay Webhook] Missing signature header — rejecting');
+      res.status(400).json({ received: false, error: 'Missing signature' });
+      return;
+    }
+
+    if (!rawBody) {
+      console.error('[Razorpay Webhook] rawBody unavailable — cannot verify signature');
+      res.status(400).json({ received: false, error: 'Cannot verify signature' });
+      return;
+    }
+
+    // Verify signature before doing any work.
+    if (!verifyWebhookSignature(rawBody, signature)) {
+      console.warn('[Razorpay Webhook] Invalid signature — rejecting');
+      res.status(400).json({ received: false, error: 'Invalid signature' });
       return;
     }
 

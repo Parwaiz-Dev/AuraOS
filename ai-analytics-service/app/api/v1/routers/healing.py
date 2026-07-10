@@ -19,7 +19,7 @@ from typing import Any
 
 from fastapi import APIRouter, Query
 
-from app.config.security import CurrentUser, RequireOwnerAdmin
+from app.config.security import RequireOwnerAdmin
 from app.schemas import ErrorResponse
 from app.services.healing_service import (
     get_agent_health,
@@ -41,7 +41,7 @@ router = APIRouter(prefix="/health", tags=["Health Dashboard"])
     summary="Full system health report",
     responses={401: {"model": ErrorResponse}},
 )
-async def system_health(user: CurrentUser) -> dict[str, Any]:
+async def system_health(user: RequireOwnerAdmin) -> dict[str, Any]:
     return await get_full_health_report()
 
 
@@ -50,7 +50,7 @@ async def system_health(user: CurrentUser) -> dict[str, Any]:
     summary="Agent health status",
     responses={401: {"model": ErrorResponse}},
 )
-async def agent_health(user: CurrentUser) -> dict[str, Any]:
+async def agent_health(user: RequireOwnerAdmin) -> dict[str, Any]:
     return await get_agent_health()
 
 
@@ -59,7 +59,7 @@ async def agent_health(user: CurrentUser) -> dict[str, Any]:
     summary="Workflow health and circuit breakers",
     responses={401: {"model": ErrorResponse}},
 )
-async def workflow_health(user: CurrentUser) -> dict[str, Any]:
+async def workflow_health(user: RequireOwnerAdmin) -> dict[str, Any]:
     return await get_workflow_health()
 
 
@@ -68,7 +68,7 @@ async def workflow_health(user: CurrentUser) -> dict[str, Any]:
     summary="System and component metrics",
     responses={401: {"model": ErrorResponse}},
 )
-async def health_metrics(user: CurrentUser) -> dict[str, Any]:
+async def health_metrics(user: RequireOwnerAdmin) -> dict[str, Any]:
     return await get_health_metrics()
 
 
@@ -78,7 +78,7 @@ async def health_metrics(user: CurrentUser) -> dict[str, Any]:
     responses={401: {"model": ErrorResponse}},
 )
 async def anomalies_endpoint(
-    user: CurrentUser,
+    user: RequireOwnerAdmin,
     limit: int = Query(default=50, ge=1, le=200),
 ) -> list[dict[str, Any]]:
     return await get_anomalies(limit)

@@ -194,15 +194,33 @@ async function runMigrations(): Promise<void> {
         try {
           console.log(`📄 Running migration: ${migration.name}`);
 
-          // Split SQL statements (dollar-quote / comment / string aware)
           const statements = splitSqlStatements(migration.sql);
 
-          // Execute each statement
-          for (const statement of statements) {
-            await client.query(statement);
+          // ALTER TYPE ... ADD VALUE cannot run inside a transaction in
+          // Postgres. Detect these and run them bare; wrap everything else
+          // in BEGIN/COMMIT so a partial failure is rolled back cleanly.
+          const alterTypeAddValue = (s: string) =>
+            /ALTER\s+TYPE\s+\S+\s+ADD\s+VALUE/i.test(s);
+
+          const hasAlterTypeAdd = statements.some(alterTypeAddValue);
+
+          if (hasAlterTypeAdd) {
+            for (const statement of statements) {
+              await client.query(statement);
+            }
+          } else {
+            await client.query('BEGIN');
+            try {
+              for (const statement of statements) {
+                await client.query(statement);
+              }
+              await client.query('COMMIT');
+            } catch (txErr) {
+              await client.query('ROLLBACK');
+              throw txErr;
+            }
           }
 
-          // Log that migration has been run
           await logMigration(client, migration.name);
 
           console.log(`✅ Migration completed: ${migration.name}\n`);

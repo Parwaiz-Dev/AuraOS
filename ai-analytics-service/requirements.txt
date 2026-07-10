@@ -28,6 +28,20 @@ joblib==1.4.2
 celery[redis]==5.4.0
 flower==2.0.1
 
+# ── Scheduling ──────────────────────────────────────────────────────────────────
+# Imported at startup by app/scheduler/scheduler.py — REQUIRED for the app to boot.
+apscheduler==3.10.4
+
+# ── LLM Providers ───────────────────────────────────────────────────────────────
+# Imported lazily by app/providers/*. openai also serves the DeepSeek provider
+# (OpenAI-compatible API). Required for Copilot / RAG generation to function.
+openai==1.59.6
+google-generativeai==0.8.3
+
+# ── System Metrics ──────────────────────────────────────────────────────────────
+# Used by app/self_healing/metrics.py for CPU/memory/thread telemetry.
+psutil==6.1.1
+
 # ── Visualization ───────────────────────────────────────────────────────────────
 matplotlib==3.10.0
 seaborn==0.13.2

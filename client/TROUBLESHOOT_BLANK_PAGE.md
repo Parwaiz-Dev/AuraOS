@@ -13,7 +13,7 @@ You should see:
 ```
 VITE v4.3.2  ready in XXX ms
 
-➜  Local:   http://localhost:5173/
+➜  Local:   http://localhost:3001/
 ➜  press h to show help
 ```
 
@@ -55,8 +55,8 @@ npm run dev
 ### Issue: `GET /login 404` or routes not found
 **Solution:**
 1. Frontend should redirect to /login automatically
-2. If seeing 404, check that you're accessing: http://localhost:5173 (not 3000)
-3. Try: http://localhost:5173/login
+2. If seeing 404, check that you're accessing: http://localhost:3001 (not 3000)
+3. Try: http://localhost:3001/login
 
 ### Issue: Styles not showing (no colors/fonts)
 **Solution:**
@@ -87,7 +87,7 @@ npm run dev
 
 ### Check Backend Health
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:3000/api/v1/health
 ```
 
 Should return:
@@ -149,13 +149,13 @@ If something is already using port 3000:
 - Kill it: `taskkill /PID <process_id> /F`
 - Or change backend port in `.env`
 
-Frontend needs port 5173 (or configured port):
+Frontend needs port 3001 (or configured port):
 ```bash
 # Windows
-netstat -ano | findstr :5173
+netstat -ano | findstr :3001
 
 # Mac/Linux  
-lsof -i :5173
+lsof -i :3001
 ```
 
 ## Step 7: Verify All Files Exist
@@ -237,14 +237,14 @@ This enables verbose logging for debugging.
 ## Quick Checklist
 
 - [ ] Backend running on http://localhost:3000 ✅
-- [ ] Frontend running on http://localhost:5173 ✅
+- [ ] Frontend running on http://localhost:3001 ✅
 - [ ] Browser console has no red errors ✅
-- [ ] Able to reach http://localhost:5173/login ✅
+- [ ] Able to reach http://localhost:3001/login ✅
 - [ ] All source files exist ✅
 - [ ] npm install completed successfully ✅
 - [ ] Hard refresh tried (Ctrl+Shift+R) ✅
 - [ ] Incognito/private mode tested ✅
-- [ ] No processes using ports 3000 or 5173 ✅
+- [ ] No processes using ports 3000 or 3001 ✅
 
 ---
 
@@ -266,7 +266,7 @@ The frontend SHOULD work at this point. If not, there may be environment-specifi
 ## Success Indicators
 
 When working correctly, you should see:
-- ✅ AuraOS login page at http://localhost:5173
+- ✅ AuraOS login page at http://localhost:3001
 - ✅ Email/password input fields
 - ✅ "Sign In" button
 - ✅ Demo credentials displayed

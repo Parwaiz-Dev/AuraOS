@@ -1,3 +1,4 @@
+
 """
 JWT authentication utilities for the AI Analytics service.
 
@@ -79,10 +80,13 @@ async def decode_token(
             token,
             settings.JWT_SECRET,
             algorithms=[settings.JWT_ALGORITHM],
+            issuer=settings.JWT_ISSUER,
             options={"require": ["exp", "id", "restaurantId"]},
         )
     except jwt.ExpiredSignatureError:
         raise InvalidTokenError("Token has expired")
+    except jwt.InvalidIssuerError:
+        raise InvalidTokenError("Invalid token issuer")
     except jwt.InvalidTokenError as exc:
         raise InvalidTokenError(f"Invalid token: {exc}")
 
@@ -129,6 +133,23 @@ def require_roles(*roles: str):
         return user
 
     return _dependency
+
+
+def resolve_tenant_id(user: TokenPayload, requested: str | None) -> str:
+    """Return the restaurant_id the caller is authorized to act on.
+
+    Prevents cross-tenant IDOR: a caller may only reference their OWN restaurant.
+    - When no id is requested, the token's ``restaurantId`` is used.
+    - A requested id that matches the token is allowed.
+    - A requested id that differs is rejected with 403.
+
+    Every endpoint that previously did ``restaurant_id or user.restaurantId`` must
+    use this instead, so a client cannot read/write another tenant's data by
+    passing an arbitrary ``restaurant_id``.
+    """
+    if not requested or requested == user.restaurantId:
+        return user.restaurantId
+    raise ForbiddenError("You may only access your own restaurant's data")
 
 
 # Dependency for endpoints restricted to OWNER/ADMIN.

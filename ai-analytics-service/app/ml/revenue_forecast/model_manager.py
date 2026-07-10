@@ -12,7 +12,6 @@ Model path:  {MODELS_DIR}/revenue_forecast/prophet_model.json
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 from pathlib import Path
@@ -68,13 +67,14 @@ def get_model(restaurant_id: str) -> "Prophet | None":
         return None
 
     try:
-        from prophet import Prophet  # type: ignore[import-untyped]
+        from prophet import Prophet  # type: ignore[import-untyped]  # noqa: F401
+        from prophet.serialize import model_from_json  # type: ignore[import-untyped]
 
-        model = Prophet()
-        # Prophet 1.1.5 uses its own serialisation; newer versions may differ.
+        # Prophet's official serialization: the file holds the JSON *string*
+        # produced by model_to_json (see save_model below).
         with open(path, encoding="utf-8") as fh:
-            model_json = json.load(fh)
-        model = model.from_dict(model_json)  # type: ignore[assignment]
+            model_json = fh.read()
+        model = model_from_json(model_json)
 
         with _cache_lock:
             _model_cache[restaurant_id] = model  # type: ignore[assignment]
@@ -97,9 +97,12 @@ def save_model(restaurant_id: str, model: "Prophet") -> str:
     path = _model_path(restaurant_id)
     _ensure_dir(path)
 
-    model_json = model.to_dict()
+    from prophet.serialize import model_to_json  # type: ignore[import-untyped]
+
+    # Prophet's official serialization produces a JSON *string*; write it verbatim.
+    model_json = model_to_json(model)
     with open(path, "w", encoding="utf-8") as fh:
-        json.dump(model_json, fh, default=str)
+        fh.write(model_json)
 
     with _cache_lock:
         _model_cache[restaurant_id] = model  # type: ignore[assignment]

@@ -18,7 +18,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.config.security import CurrentUser, RequireOwnerAdmin
+from app.config.security import CurrentUser, RequireOwnerAdmin, resolve_tenant_id
 from app.schemas import ErrorResponse
 from app.services.autonomy_service import (
     approve_action,
@@ -125,7 +125,7 @@ async def run_action_endpoint(
 
     return await run_autonomous_action(
         action_name=action_name,
-        restaurant_id=body.get("restaurant_id", user.restaurantId),
+        restaurant_id=resolve_tenant_id(user, body.get("restaurant_id")),
         user_id=user.id,
         parameters=body.get("parameters", {}),
     )

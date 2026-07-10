@@ -97,8 +97,14 @@ export async function createRazorpayOrder(
  */
 export function verifyWebhookSignature(rawBody: Buffer, signature: string): boolean {
   if (!env.RAZORPAY_WEBHOOK_SECRET) {
-    console.warn('[Razorpay] RAZORPAY_WEBHOOK_SECRET not set — skipping signature check');
-    return true; // allow in dev mode
+    // Fail closed in production — an unconfigured secret must never mean
+    // "trust everything". Only allow the bypass in non-production for local dev.
+    if (env.NODE_ENV === 'production') {
+      console.error('[Razorpay] RAZORPAY_WEBHOOK_SECRET not set — rejecting webhook in production');
+      return false;
+    }
+    console.warn('[Razorpay] RAZORPAY_WEBHOOK_SECRET not set — skipping signature check (dev mode)');
+    return true;
   }
 
   const expectedSignature = crypto

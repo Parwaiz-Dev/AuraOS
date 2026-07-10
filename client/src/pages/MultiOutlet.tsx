@@ -63,11 +63,6 @@ interface AggregateMetrics {
 const MultiOutlet: React.FC = () => {
   const { user } = useAuth();
 
-  // Guard: super admin only
-  if (user && !user.isSuperAdmin) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   const [groups, setGroups] = useState<OrganizationGroup[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<OrganizationGroup | null>(null);
   const [metrics, setMetrics] = useState<AggregateMetrics | null>(null);
@@ -111,6 +106,11 @@ const MultiOutlet: React.FC = () => {
     fetchGroups();
     fetchRestaurants();
   }, [fetchGroups, fetchRestaurants]);
+
+  // Guard: super admin only (placed after all hooks to satisfy Rules of Hooks)
+  if (user && !user.isSuperAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   // Select group & load details + metrics
   const selectGroup = async (group: OrganizationGroup) => {

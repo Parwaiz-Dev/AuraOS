@@ -101,7 +101,7 @@ Each type pre-configures the right feature flags, dashboard cards, and navigatio
 
 - Create and manage orders with a slide-over cart panel
 - Supports **Dine-In**, **Parcel**, and **Online** order types
-- Order status pipeline: `RECEIVED → PREPARING → READY → COMPLETED`
+- Order status pipeline: `CREATED → ACCEPTED → PREPARING → READY → COMPLETED`
 - Running tabs — active orders persist on tables until paid
 - Auto-incrementing daily token numbers for parcel/pickup orders
 - Programmatic KOT and receipt printing via `window.print()`
@@ -437,7 +437,7 @@ graph TB
 docker compose up -d
 ```
 
-Creates a PostgreSQL 15 container: database `auraos`, user `auraos_user`, password `auraos_password`, port `5432`.
+Creates PostgreSQL 15, Redis 7, backend, AI analytics, frontend, and nginx containers. PostgreSQL is mapped to host port `5433` (container port 5432).
 
 ### 1. Clone & Install
 
@@ -464,10 +464,12 @@ cp .env.example .env
 Edit `.env` with the minimum required values:
 
 ```ini
-DATABASE_URL=postgresql://auraos_user:auraos_password@localhost:5432/auraos
+DATABASE_URL=postgresql://auraos_user:auraos_password@localhost:5433/auraos
 JWT_SECRET=your_random_secret_at_least_32_characters_long
 JWT_REFRESH_SECRET=another_random_secret_at_least_32_characters
-FRONTEND_URL=http://localhost:3001
+CORS_ORIGIN=http://localhost:3001,http://localhost:3002
+# Required by docker-compose.yml for the postgres container:
+POSTGRES_PASSWORD=auraos_password
 ```
 
 > Razorpay, WhatsApp, Zomato, SMTP, and Sentry are **optional** — defaults use cash-only payments, console email, and console monitoring.
@@ -706,7 +708,7 @@ Instead of `if (restaurant.type === 'FULL_SERVICE')` scattered throughout the co
 Orders placed by staff appear instantly on the kitchen display without polling:
 
 - `ORDER_CREATED` — New order appears on the board
-- `ORDER_STATUS_CHANGED` — Order moves through RECEIVED → PREPARING → READY → COMPLETED
+- `ORDER_STATUS_CHANGED` — Order moves through CREATED → ACCEPTED → PREPARING → READY → COMPLETED
 - `ORDER_ITEM_STATUS` — Individual item marked done/undone
 - `ORDER_DELAYED` — Visual alert when order exceeds preparation threshold
 

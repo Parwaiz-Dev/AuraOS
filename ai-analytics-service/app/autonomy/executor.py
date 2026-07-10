@@ -120,9 +120,12 @@ class Executor:
             return await self._run_publish_event(restaurant_id, parameters)
 
         if action_name in ("revenue_recovery", "customer_retention", "modify_inventory"):
-            return await self._run_analytics_action("generate_insight", restaurant_id)
+            raise NotImplementedError(
+                f"Action '{action_name}' is registered but not yet implemented — "
+                "it requires business-logic integration with the Core API."
+            )
 
-        return {"executed": True, "action": action_name}
+        raise NotImplementedError(f"Unknown action '{action_name}' — not implemented")
 
     async def _run_analytics_action(self, action_name: str, restaurant_id: str) -> dict[str, Any]:
         try:
@@ -147,22 +150,17 @@ class Executor:
                     result = await get_recommendations(session, restaurant_id, limit=10)
                     return {"recommendations": len(result) if result else 0}
         except Exception as exc:
-            return {"executed": True, "action": action_name, "note": str(exc)}
+            raise RuntimeError(f"Analytics action '{action_name}' failed: {exc}") from exc
 
         return {"executed": True, "action": action_name}
 
     async def _run_notification_action(
         self, action_name: str, restaurant_id: str, parameters: dict[str, Any],
     ) -> dict[str, Any]:
-        try:
-            from app.events.domain_events import NotificationSent
-            from app.events.publisher import publish
-
-            channel = "email" if action_name == "send_email" else "webhook"
-            await publish(NotificationSent(restaurant_id=restaurant_id, channel=channel, success=True))
-            return {"notified": True, "channel": channel}
-        except Exception:
-            return {"notified": False}
+        raise NotImplementedError(
+            f"Notification action '{action_name}' is not yet wired to a real delivery "
+            "channel — email/webhook dispatch needs to be implemented."
+        )
 
     async def _run_retrain(self, restaurant_id: str, parameters: dict[str, Any]) -> dict[str, Any]:
         model_name = parameters.get("model_name", "revenue_forecast")

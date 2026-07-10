@@ -14,7 +14,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.config.security import CurrentUser, RequireOwnerAdmin
+from app.config.security import RequireOwnerAdmin
 from app.monitoring.model_health import compute_model_health
 from app.scheduler.job_registry import trigger_job
 from app.schemas import (
@@ -44,7 +44,7 @@ _MODEL_TO_JOB_ID: dict[str, str] = {
     response_model=ModelHealthResponse,
     summary="Model health status",
 )
-async def model_health(user: CurrentUser) -> ModelHealthResponse:
+async def model_health(user: RequireOwnerAdmin) -> ModelHealthResponse:
     """Return health status for each model type.
 
     A model is 'healthy' if at least one ACTIVE version exists

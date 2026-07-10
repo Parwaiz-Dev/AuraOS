@@ -17,7 +17,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.config.security import CurrentUser, RequireOwnerAdmin
+from app.config.security import CurrentUser, RequireOwnerAdmin, resolve_tenant_id
 from app.schemas import ErrorResponse
 from app.services.workflow_service import (
     cancel_workflow,
@@ -62,7 +62,7 @@ async def workflow_history(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
 ) -> dict[str, Any]:
-    rid = restaurant_id or user.restaurantId
+    rid = resolve_tenant_id(user, restaurant_id)
     return await get_workflow_history(
         restaurant_id=rid,
         workflow_id=workflow_id,
@@ -109,7 +109,7 @@ async def run_workflow_endpoint(
     try:
         result = await run_workflow(
             wf_id,
-            restaurant_id=body.get("restaurant_id", user.restaurantId),
+            restaurant_id=resolve_tenant_id(user, body.get("restaurant_id")),
             user_id=user.id,
             metadata=body.get("metadata", {}),
         )

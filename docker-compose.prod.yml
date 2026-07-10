@@ -1,0 +1,16 @@
+# Production overrides — use with:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Removes host-port mappings for internal services so only nginx is reachable
+# from the network. Postgres, Redis, and AI Analytics communicate only over
+# the internal Docker network.
+
+services:
+  postgres:
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+
+  ai-analytics:
+    ports: !reset []

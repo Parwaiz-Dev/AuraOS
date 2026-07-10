@@ -16,7 +16,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.config.security import CurrentUser, RequireOwnerAdmin
+from app.config.security import RequireOwnerAdmin
 from app.schemas import ErrorResponse
 from app.services.mcp_service import (
     execute_mcp_tool,
@@ -35,7 +35,7 @@ router = APIRouter(prefix="/mcp", tags=["MCP"])
     responses={401: {"model": ErrorResponse}},
 )
 async def list_tools(
-    user: CurrentUser,
+    user: RequireOwnerAdmin,
     category: str | None = Query(default=None),
 ) -> list[dict[str, Any]]:
     return await list_mcp_tools(category)
@@ -48,7 +48,7 @@ async def list_tools(
 )
 async def execute_tool(
     body: dict[str, Any],
-    user: CurrentUser,
+    user: RequireOwnerAdmin,
 ) -> dict[str, Any]:
     tool_name = body.get("tool_name", "")
     if not tool_name:
@@ -89,7 +89,7 @@ async def register_tool(
     summary="MCP execution statistics",
     responses={401: {"model": ErrorResponse}},
 )
-async def mcp_stats(user: CurrentUser) -> dict[str, Any]:
+async def mcp_stats(user: RequireOwnerAdmin) -> dict[str, Any]:
     return await get_mcp_stats()
 
 
@@ -99,7 +99,7 @@ async def mcp_stats(user: CurrentUser) -> dict[str, Any]:
     responses={401: {"model": ErrorResponse}},
 )
 async def mcp_log(
-    user: CurrentUser,
+    user: RequireOwnerAdmin,
     limit: int = Query(default=50, ge=1, le=200),
 ) -> list[dict[str, Any]]:
     return await get_mcp_execution_log(limit)

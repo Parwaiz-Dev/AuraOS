@@ -20,6 +20,10 @@ const JWT_REFRESH_SECRET = env.JWT_REFRESH_SECRET;
 const JWT_EXPIRY = env.JWT_EXPIRES_IN;
 const JWT_REFRESH_EXPIRY = env.JWT_REFRESH_EXPIRES_IN;
 
+// Issuer claim stamped on every access token. The AI Analytics service verifies
+// this (JWT_ISSUER=auraos-core) so tokens from other HS256 signers are rejected.
+const JWT_ISSUER = 'auraos-core';
+
 export class AuthService {
   async hashPassword(password: string): Promise<string> {
     const salt = await bcryptjs.genSalt(10);
@@ -31,16 +35,16 @@ export class AuthService {
   }
 
   generateToken(payload: JWTPayload): string {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY as any, algorithm: 'HS256' });
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY as any, algorithm: 'HS256', issuer: JWT_ISSUER });
   }
 
   generateRefreshToken(payload: JWTPayload): string {
-    return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: JWT_REFRESH_EXPIRY as any, algorithm: 'HS256' });
+    return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: JWT_REFRESH_EXPIRY as any, algorithm: 'HS256', issuer: JWT_ISSUER });
   }
 
   verifyToken(token: string): JWTPayload | null {
     try {
-      return jwt.verify(token, JWT_SECRET) as JWTPayload;
+      return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'], issuer: JWT_ISSUER }) as JWTPayload;
     } catch {
       return null;
     }
@@ -48,7 +52,7 @@ export class AuthService {
 
   verifyRefreshToken(token: string): JWTPayload | null {
     try {
-      return jwt.verify(token, JWT_REFRESH_SECRET) as JWTPayload;
+      return jwt.verify(token, JWT_REFRESH_SECRET, { algorithms: ['HS256'], issuer: JWT_ISSUER }) as JWTPayload;
     } catch {
       return null;
     }

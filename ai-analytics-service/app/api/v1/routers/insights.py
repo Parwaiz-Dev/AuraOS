@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.database import get_db
-from app.config.security import CurrentUser, TokenPayload
+from app.config.security import CurrentUser, TokenPayload, resolve_tenant_id
 from app.schemas import (
     ErrorResponse,
     InsightHistoryResponse,
@@ -89,6 +89,6 @@ async def history(
     ),
 ) -> dict:
     """Retrieve stored insight history."""
-    rid = restaurant_id or user.restaurantId
+    rid = resolve_tenant_id(user, restaurant_id)
     entries = await get_history(restaurant_id=rid, limit=limit)
     return {"entries": entries, "total": len(entries)}

@@ -6,7 +6,6 @@ Model path:  {MODELS_DIR}/order_forecast/prophet_{restaurant_id}.json
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 from threading import Lock
@@ -49,11 +48,12 @@ def get_model(restaurant_id: str) -> "Prophet | None":
         return None
 
     try:
-        from prophet import Prophet  # type: ignore[import-untyped]
+        from prophet import Prophet  # type: ignore[import-untyped]  # noqa: F401
+        from prophet.serialize import model_from_json  # type: ignore[import-untyped]
 
         with open(path, encoding="utf-8") as fh:
-            model_json = json.load(fh)
-        model = Prophet().from_dict(model_json)  # type: ignore[assignment]
+            model_json = fh.read()
+        model = model_from_json(model_json)
 
         with _cache_lock:
             _model_cache[restaurant_id] = model  # type: ignore[assignment]
@@ -69,9 +69,11 @@ def get_model(restaurant_id: str) -> "Prophet | None":
 def save_model(restaurant_id: str, model: "Prophet") -> str:
     path = _model_path(restaurant_id)
     _ensure_dir(path)
-    model_json = model.to_dict()
+    from prophet.serialize import model_to_json  # type: ignore[import-untyped]
+
+    model_json = model_to_json(model)
     with open(path, "w", encoding="utf-8") as fh:
-        json.dump(model_json, fh, default=str)
+        fh.write(model_json)
     with _cache_lock:
         _model_cache[restaurant_id] = model  # type: ignore[assignment]
     logger.info("Saved Order Forecast model to %s", path)

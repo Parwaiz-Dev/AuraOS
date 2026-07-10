@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { whatsappController } from './whatsapp.controller';
 import { authenticate } from '@/shared/middleware/authenticate';
 import {
-  captureRawBody,
   verifyWhatsAppSignature,
   handleVerificationChallenge,
 } from './whatsapp.middleware';
@@ -20,16 +19,14 @@ router.get('/webhook', handleVerificationChallenge);
  * POST /webhook — Incoming WhatsApp messages.
  *
  * Middleware chain (order matters):
- *   1. captureRawBody   — reads raw bytes before JSON parsing (needed for HMAC)
- *   2. verifyWhatsAppSignature — verifies X-Hub-Signature-256 header
- *   3. whatsappController.webhook — processes the message
+ *   1. verifyWhatsAppSignature — verifies X-Hub-Signature-256 over req.rawBody
+ *   2. whatsappController.webhook — processes the message
  *
- * Note: captureRawBody replaces express.json() for this route only.
- * It manually parses JSON after capturing raw bytes, so req.body is still available.
+ * The raw body is captured globally by the express.json({ verify }) hook in
+ * app.ts, so req.rawBody is already available here for HMAC verification.
  */
 router.post(
   '/webhook',
-  captureRawBody,
   verifyWhatsAppSignature,
   (req, res, next) => whatsappController.webhook(req, res, next),
 );

@@ -16,7 +16,7 @@ from typing import Any
 
 from fastapi import APIRouter, Query
 
-from app.config.security import CurrentUser, RequireOwnerAdmin
+from app.config.security import CurrentUser, RequireOwnerAdmin, resolve_tenant_id
 from app.events.dead_letter import get_dlq
 from app.events.domain_events import ALL_EVENT_TYPES
 from app.events.event import BaseEvent
@@ -51,7 +51,7 @@ async def list_events(
     page_size: int = Query(default=50, ge=1, le=200),
 ) -> dict[str, Any]:
     store = get_event_store()
-    rid = restaurant_id or user.restaurantId
+    rid = resolve_tenant_id(user, restaurant_id)
     result = await store.query(
         event_type=event_type,
         restaurant_id=rid,
@@ -118,7 +118,7 @@ async def event_history(
     page_size: int = Query(default=50, ge=1, le=200),
 ) -> dict[str, Any]:
     store = get_event_store()
-    rid = restaurant_id or user.restaurantId
+    rid = resolve_tenant_id(user, restaurant_id)
     return await store.query(
         event_type=event_type,
         restaurant_id=rid,
@@ -166,10 +166,10 @@ async def replay_events(
         replayed = await dlq.replay_all()
         return {"replayed": replayed, "failed": 0, "message": "Dead letter queue replayed"}
 
-    # Bulk replay by filters
+    # Bulk replay by filters — always scoped to the caller's own restaurant.
     result = await store.query(
         event_type=body.event_type,
-        restaurant_id=body.restaurant_id,
+        restaurant_id=resolve_tenant_id(user, body.restaurant_id),
         start_date=body.start_date,
         end_date=body.end_date,
         page=1,

@@ -2,17 +2,17 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: auraos-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: auraos_user
-      POSTGRES_PASSWORD: auraos_password
-      POSTGRES_DB: auraos
-      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_USER: ${POSTGRES_USER:-auraos_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-auraos}
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U auraos_user -d auraos"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-auraos_user} -d ${POSTGRES_DB:-auraos}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -20,6 +20,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: auraos-redis
+    restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
     volumes:
       - redis_data:/data
@@ -32,10 +33,11 @@ services:
   backend:
     build: .
     container_name: auraos-backend
+    restart: unless-stopped
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql://auraos_user:auraos_password@postgres:5432/auraos
+      DATABASE_URL: postgresql://${POSTGRES_USER:-auraos_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-auraos}
       REDIS_URL: redis://redis:6379
       # CORS_ORIGIN: http://localhost
     depends_on:
@@ -55,12 +57,13 @@ services:
       context: ./ai-analytics-service
       dockerfile: Dockerfile
     container_name: auraos-ai-analytics
+    restart: unless-stopped
     env_file:
       - ./ai-analytics-service/.env
     environment:
-      DATABASE_URL: postgresql+asyncpg://auraos_user:auraos_password@postgres:5432/auraos
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-auraos_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-auraos}
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: your_jwt_secret_here_min_32_chars_change_production_12345
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env and match the backend}
     ports:
       - "8000:8000"
     depends_on:
@@ -80,21 +83,35 @@ services:
       context: ./client
       dockerfile: Dockerfile
     container_name: auraos-frontend
+    restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   nginx:
     build:
       context: ./nginx
       dockerfile: Dockerfile
     container_name: auraos-nginx
+    restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
-      - frontend
-      - backend
-      - ai-analytics
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      ai-analytics:
+        condition: service_healthy
 
 volumes:
   postgres_data:

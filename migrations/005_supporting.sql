@@ -1,7 +1,7 @@
 -- 005_supporting.sql - Create supporting tables (inventory, payments, integration logs)
 
 -- Inventory tracking
-CREATE TABLE inventory_items (
+CREATE TABLE IF NOT EXISTS inventory_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
     menu_item_id UUID NOT NULL REFERENCES menu_items(id) ON DELETE CASCADE,
@@ -13,11 +13,11 @@ CREATE TABLE inventory_items (
     UNIQUE(restaurant_id, menu_item_id)
 );
 
-CREATE INDEX idx_inventory_items_restaurant_id ON inventory_items(restaurant_id);
-CREATE INDEX idx_inventory_items_menu_item_id ON inventory_items(menu_item_id);
+CREATE INDEX IF NOT EXISTS idx_inventory_items_restaurant_id ON inventory_items(restaurant_id);
+CREATE INDEX IF NOT EXISTS idx_inventory_items_menu_item_id ON inventory_items(menu_item_id);
 
 -- Payments for orders
-CREATE TABLE payments (
+CREATE TABLE IF NOT EXISTS payments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
     order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
@@ -29,13 +29,13 @@ CREATE TABLE payments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_payments_restaurant_id ON payments(restaurant_id);
-CREATE INDEX idx_payments_order_id ON payments(order_id);
-CREATE INDEX idx_payments_status ON payments(status);
-CREATE INDEX idx_payments_created_at ON payments(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_payments_restaurant_id ON payments(restaurant_id);
+CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+CREATE INDEX IF NOT EXISTS idx_payments_created_at ON payments(created_at DESC);
 
 -- Integration logs (webhooks, API calls, etc.)
-CREATE TABLE integration_logs (
+CREATE TABLE IF NOT EXISTS integration_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
     source integration_source NOT NULL,
@@ -49,8 +49,8 @@ CREATE TABLE integration_logs (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_integration_logs_restaurant_id ON integration_logs(restaurant_id);
-CREATE INDEX idx_integration_logs_source ON integration_logs(source);
-CREATE INDEX idx_integration_logs_status ON integration_logs(status);
-CREATE INDEX idx_integration_logs_order_id ON integration_logs(order_id);
-CREATE INDEX idx_integration_logs_created_at ON integration_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_integration_logs_restaurant_id ON integration_logs(restaurant_id);
+CREATE INDEX IF NOT EXISTS idx_integration_logs_source ON integration_logs(source);
+CREATE INDEX IF NOT EXISTS idx_integration_logs_status ON integration_logs(status);
+CREATE INDEX IF NOT EXISTS idx_integration_logs_order_id ON integration_logs(order_id);
+CREATE INDEX IF NOT EXISTS idx_integration_logs_created_at ON integration_logs(created_at DESC);

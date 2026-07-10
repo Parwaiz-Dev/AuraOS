@@ -9,6 +9,11 @@ from here rather than reading os.environ directly.
 from __future__ import annotations
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import model_validator
+
+
+# Placeholder secret shipped in examples — must never be used to verify real tokens.
+_INSECURE_JWT_PLACEHOLDER = "your_jwt_secret_here_min_32_chars_change_production_12345"
 
 
 class Settings(BaseSettings):
@@ -45,7 +50,9 @@ class Settings(BaseSettings):
     CACHE_TTL_SECONDS: int = 300  # 5 minutes default
 
     # ── JWT (must match AuraOS Core API secrets) ────────────────────────────
-    JWT_SECRET: str = "your_jwt_secret_here_min_32_chars_change_production_12345"
+    # No secure default — must be provided via env. The validator below refuses
+    # to start with an empty or placeholder secret unless DEBUG is enabled.
+    JWT_SECRET: str = ""
     JWT_ALGORITHM: str = "HS256"
     JWT_ISSUER: str = "auraos-core"
 
@@ -322,6 +329,28 @@ class Settings(BaseSettings):
 
     GRAPH_MAX_ITERATIONS: int = 50
     """Maximum iterations (loop guard) for graph execution."""
+
+    @model_validator(mode="after")
+    def _validate_jwt_secret(self) -> "Settings":
+        """Refuse to run with a missing/placeholder JWT secret outside DEBUG.
+
+        This service only *verifies* tokens, so a weak or default secret lets an
+        attacker forge admin tokens for any tenant. In production the secret must
+        be a real value provided via the environment.
+        """
+        if not self.DEBUG:
+            if not self.JWT_SECRET or self.JWT_SECRET == _INSECURE_JWT_PLACEHOLDER:
+                raise ValueError(
+                    "JWT_SECRET must be set to a strong value (matching the Core API) "
+                    "when DEBUG is disabled — refusing to start with an insecure secret."
+                )
+            if len(self.JWT_SECRET) < 32:
+                raise ValueError("JWT_SECRET must be at least 32 characters.")
+        elif not self.JWT_SECRET:
+            # Dev convenience: allow an empty secret only in DEBUG, fall back to a
+            # clearly-marked dev value so local tokens still verify.
+            self.JWT_SECRET = _INSECURE_JWT_PLACEHOLDER
+        return self
 
 
 # Singleton

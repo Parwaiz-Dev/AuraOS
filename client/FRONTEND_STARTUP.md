@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-The frontend will start on: **http://localhost:5173** (or configured port in vite.config.ts)
+The frontend will start on: **http://localhost:3001** (configured in vite.config.ts)
 
 ## Step 3: Ensure Backend is Running
 Before accessing the frontend, make sure the backend is running:
@@ -23,7 +23,7 @@ npm run dev
 Backend should be running on: **http://localhost:3000**
 
 ## Step 4: Login
-Navigate to http://localhost:5173 and login with:
+Navigate to http://localhost:3001 and login with:
 - **Email**: admin@demo-kitchen.local
 - **Password**: demo123
 
@@ -49,15 +49,15 @@ Navigate to http://localhost:5173 and login with:
 
 ## Available Endpoints After Login
 
-- **Dashboard**: http://localhost:5173/
-- **Orders**: http://localhost:5173/orders
-- **Tables**: http://localhost:5173/tables
-- **Menu**: http://localhost:5173/menu
-- **Payments**: http://localhost:5173/payments
-- **Inventory**: http://localhost:5173/inventory (Admin only)
-- **Users**: http://localhost:5173/users (Admin only)
-- **Reports**: http://localhost:5173/reports (Admin only)
-- **Kitchen Display**: http://localhost:5173/kitchen
+- **Dashboard**: http://localhost:3001/
+- **Orders**: http://localhost:3001/orders
+- **Tables**: http://localhost:3001/tables
+- **Menu**: http://localhost:3001/menu
+- **Payments**: http://localhost:3001/payments
+- **Inventory**: http://localhost:3001/inventory (Admin only)
+- **Users**: http://localhost:3001/users (Admin only)
+- **Reports**: http://localhost:3001/reports (Admin only)
+- **Kitchen Display**: http://localhost:3001/kitchen
 
 ## Build for Production
 

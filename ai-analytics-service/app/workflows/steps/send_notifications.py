@@ -24,5 +24,8 @@ class SendNotificationsStep(WorkflowStep):
         if not insights_data:
             return {"sent": False, "reason": "no_insights"}
 
-        logger.info("Notification step for restaurant=%s", ctx.restaurant_id)
-        return {"sent": True, "channel": "webhook"}
+        logger.warning(
+            "Notification step for restaurant=%s — delivery not implemented, skipping",
+            ctx.restaurant_id,
+        )
+        return {"sent": False, "reason": "not_implemented"}

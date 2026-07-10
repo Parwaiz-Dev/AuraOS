@@ -15,11 +15,10 @@ class NotificationAgent(SpecializedAgent):
     supported_events = ["InsightGenerated", "NotificationSent", "InventoryLow"]
 
     async def process(self, params: dict[str, Any]) -> dict[str, Any]:
-        rid = params.get("restaurant_id", "")
-        try:
-            from app.events.domain_events import NotificationSent
-            from app.events.publisher import publish
-            await publish(NotificationSent(restaurant_id=rid, channel="webhook", success=True))
-            return {"notified": True, "source": self.agent_id}
-        except Exception:
-            return {"notified": False, "source": self.agent_id}
+        return {
+            "notified": False,
+            "source": self.agent_id,
+            "reason": "not_implemented — notification dispatch is not yet wired to a "
+                      "real delivery channel (email/webhook). This agent will report "
+                      "honestly until the integration is built.",
+        }

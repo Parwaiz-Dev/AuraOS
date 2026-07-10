@@ -20,6 +20,11 @@ import React from 'react'
 import { Order, OrderItem } from '../types/order'
 import { formatDate } from '../lib/utils'
 
+function esc(s: string | undefined | null): string {
+  if (!s) return ''
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 interface PrintKOTProps {
   order: Order
   items: OrderItem[]
@@ -40,7 +45,7 @@ export function printKOT(order: Order, items: OrderItem[], restaurantName = 'Kit
       ? `<div style="font-size:11px;font-weight:normal;color:#555;margin-top:2px;">${mods
           .map((m) => {
             const adj = Number(m.price_adjustment || 0)
-            return `${m.modifier_option_name}${adj > 0 ? ` (+${adj})` : adj < 0 ? ` (${adj})` : ''}`
+            return `${esc(m.modifier_option_name)}${adj > 0 ? ` (+${adj})` : adj < 0 ? ` (${adj})` : ''}`
           })
           .join(', ')}</div>`
       : ''
@@ -51,10 +56,10 @@ export function printKOT(order: Order, items: OrderItem[], restaurantName = 'Kit
       <tr>
         <td style="font-size:16px;font-weight:bold;padding:2px 0;">${item.quantity}x</td>
         <td style="padding:2px 4px;font-size:14px;font-weight:bold;">
-          ${item.menu_item_name || item.menu_item_id}
+          ${esc(item.menu_item_name || item.menu_item_id)}
           ${fmtMods(item.modifiers)}
           ${item.special_instructions
-            ? `<div style="font-size:11px;font-weight:normal;color:#555;margin-top:2px;">📝 ${item.special_instructions}</div>`
+            ? `<div style="font-size:11px;font-weight:normal;color:#555;margin-top:2px;">📝 ${esc(item.special_instructions)}</div>`
             : ''}
         </td>
       </tr>`,
@@ -66,7 +71,7 @@ export function printKOT(order: Order, items: OrderItem[], restaurantName = 'Kit
     <html>
     <head>
       <meta charset="utf-8">
-      <title>KOT — ${order.order_number}</title>
+      <title>KOT — ${esc(order.order_number)}</title>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -89,17 +94,17 @@ export function printKOT(order: Order, items: OrderItem[], restaurantName = 'Kit
     </head>
     <body>
       <div class="center">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;">${restaurantName}</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;">${esc(restaurantName)}</div>
         <div style="font-size:11px;">KITCHEN ORDER TICKET</div>
       </div>
       <div class="divider"></div>
 
       <div class="center">
-        <div class="order-num">${order.order_number}</div>
+        <div class="order-num">${esc(order.order_number)}</div>
         <div style="font-size:12px;margin-top:2px;">
-          ${order.table?.table_number ? `TABLE ${order.table.table_number}` : order.order_type}
+          ${order.table?.table_number ? `TABLE ${esc(String(order.table.table_number))}` : esc(order.order_type)}
           &nbsp;·&nbsp;
-          ${order.order_source}
+          ${esc(order.order_source)}
         </div>
         <div style="font-size:11px;color:#555;">${formatDate(order.created_at)}</div>
       </div>
@@ -113,7 +118,7 @@ export function printKOT(order: Order, items: OrderItem[], restaurantName = 'Kit
       ${order.special_instructions ? `
         <div class="divider"></div>
         <div style="font-size:11px;">
-          <strong>NOTE:</strong> ${order.special_instructions}
+          <strong>NOTE:</strong> ${esc(order.special_instructions)}
         </div>
       ` : ''}
 

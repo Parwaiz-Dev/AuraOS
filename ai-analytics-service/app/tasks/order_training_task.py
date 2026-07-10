@@ -29,7 +29,7 @@ async def run_order_training(restaurant_id: str) -> None:
                 return
 
             metrics = {
-                "training_rows": len(model.history) if model.history else 0,
+                "training_rows": len(model.history) if model.history is not None else 0,
             }
             register_training_success(
                 model_name, restaurant_id, version,

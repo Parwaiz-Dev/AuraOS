@@ -38,6 +38,11 @@ import { env } from '@/config/env';
 export function createApp(): Express {
   const app = express();
 
+  // The app runs behind nginx — trust the first proxy hop so that req.ip,
+  // express-rate-limit, and req.protocol resolve correctly instead of always
+  // seeing the reverse-proxy's address.
+  app.set('trust proxy', 1);
+
   // Parse allowed origins from env — supports comma-separated list
   const allowedOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean);
 
@@ -52,7 +57,16 @@ export function createApp(): Express {
     credentials: true,
   }));
   app.use(morgan('combined'));
-  app.use(express.json());
+  // Capture the raw request body during JSON parsing so webhook handlers can
+  // verify HMAC signatures over the exact bytes the gateway signed. The verify
+  // hook runs for EVERY request before req.body is exposed, which means the
+  // per-route captureRawBody middlewares are no longer needed (and would in fact
+  // hang, since the stream is already consumed by the time they run).
+  app.use(express.json({
+    verify: (req, _res, buf) => {
+      (req as unknown as { rawBody?: Buffer }).rawBody = buf;
+    },
+  }));
   app.use(express.urlencoded({ extended: true }));
   // Request monitoring — measures duration + feeds metrics counters
   app.use(requestMonitor);
