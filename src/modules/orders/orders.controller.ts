@@ -9,6 +9,7 @@ import {
   UpdateOrderItemStatusSchema,
 } from './orders.types';
 import { successResponse } from '@/shared/utils/responseHandler';
+import { parsePagination, paginatedResponse } from '@/shared/utils/pagination';
 import { AuthenticatedRequest } from '@/shared/middleware/authenticate';
 import { eventBroadcaster } from '@/shared/socket/eventBroadcaster';
 import { clearDelayAlert } from '@/shared/jobs/delayDetector';
@@ -45,11 +46,15 @@ export class OrdersController {
         throw new Error('User not associated with a restaurant');
       }
 
-      const limit = parseInt(req.query.limit as string) || 50;
-      const offset = parseInt(req.query.offset as string) || 0;
+      const pagination = parsePagination(req.query);
+      const status = req.query.status as string | undefined;
+      const sortBy = req.query.sort_by as string | undefined;
+      const sortOrder = req.query.sort_order as string | undefined;
 
-      const orders = await ordersService.getOrders(restaurantId, limit, offset);
-      res.status(200).json(successResponse(orders));
+      const { items, total } = await ordersService.getOrders(
+        restaurantId, pagination.limit, pagination.offset, status, sortBy, sortOrder,
+      );
+      res.status(200).json(successResponse(paginatedResponse(items, total, pagination)));
     } catch (error) {
       next(error);
     }

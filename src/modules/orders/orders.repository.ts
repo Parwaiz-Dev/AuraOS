@@ -358,6 +358,90 @@ export class OrdersRepository {
     }));
   }
 
+  /**
+   * Count orders for a restaurant, with optional status filter.
+   * Used to return pagination metadata (total count).
+   */
+  async countByRestaurantId(
+    restaurantId: string,
+    statusFilter?: string,
+  ): Promise<number> {
+    const conditions = ['restaurant_id = $1'];
+    const params: any[] = [restaurantId];
+
+    if (statusFilter) {
+      params.push(statusFilter);
+      conditions.push(`status = $${params.length}`);
+    }
+
+    const result = await query(
+      `SELECT COUNT(*)::int AS total FROM orders WHERE ${conditions.join(' AND ')}`,
+      params,
+    );
+    return result.rows[0].total;
+  }
+
+  async findByRestaurantIdFiltered(
+    restaurantId: string,
+    limit: number,
+    offset: number,
+    statusFilter?: string,
+    sortBy: string = 'created_at',
+    sortOrder: string = 'DESC',
+  ): Promise<EnrichedOrder[]> {
+    const allowedSorts: Record<string, string> = {
+      created_at: 'o.created_at',
+      total_amount: 'o.total_amount',
+      status: 'o.status',
+      order_number: 'o.order_number',
+    };
+    const sortCol = allowedSorts[sortBy] || 'o.created_at';
+    const dir = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    const conditions = ['o.restaurant_id = $1'];
+    const params: any[] = [restaurantId];
+
+    if (statusFilter) {
+      params.push(statusFilter);
+      conditions.push(`o.status = $${params.length}`);
+    }
+
+    params.push(limit, offset);
+
+    const result = await query(
+      `
+      SELECT
+        o.id, o.restaurant_id, o.table_id, o.order_number, o.order_type,
+        o.order_source, o.status, o.total_amount, o.priority_score,
+        o.special_instructions, o.created_by, o.created_at, o.updated_at, o.completed_at,
+        rt.id AS table_join_id, rt.table_number,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', oi.id, 'order_id', oi.order_id, 'restaurant_id', oi.restaurant_id,
+              'menu_item_id', oi.menu_item_id, 'quantity', oi.quantity,
+              'unit_price', oi.unit_price, 'special_instructions', oi.special_instructions
+            )
+          ) FILTER (WHERE oi.id IS NOT NULL), '[]'
+        ) AS order_items
+      FROM orders o
+      LEFT JOIN restaurant_tables rt ON o.table_id = rt.id
+      LEFT JOIN order_items oi ON oi.order_id = o.id
+      WHERE ${conditions.join(' AND ')}
+      GROUP BY o.id, rt.id
+      ORDER BY ${sortCol} ${dir}
+      LIMIT $${params.length - 1} OFFSET $${params.length}
+      `,
+      params,
+    );
+
+    return result.rows.map((row) => ({
+      ...row,
+      table: row.table_number ? { id: row.table_join_id, table_number: row.table_number } : null,
+      order_items: row.order_items || [],
+    }));
+  }
+
   async update(
     orderId: string,
     updates: Partial<{

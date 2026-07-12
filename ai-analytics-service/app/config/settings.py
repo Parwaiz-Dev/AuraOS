@@ -103,7 +103,7 @@ class Settings(BaseSettings):
 
     # ── Gemini ──────────────────────────────────────────────────────────────
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.5-pro-exp-03-25"
+    GEMINI_MODEL: str = "gemini-2.0-flash"
     GEMINI_MAX_TOKENS: int = 1024
     GEMINI_TEMPERATURE: float = 0.3
 
@@ -181,8 +181,10 @@ class Settings(BaseSettings):
     RAG_TOP_K: int = 5
     """Default number of chunks to retrieve per query."""
 
-    RAG_VECTOR_DB: str = "in_memory"
-    """Vector database backend: in_memory | qdrant | pgvector."""
+    RAG_VECTOR_DB: str = "pgvector"
+    """Vector database backend: in_memory | qdrant | pgvector.
+    Default 'pgvector' uses the existing Postgres instance (no extra service).
+    'in_memory' is per-process/non-persistent — only suitable for dev/testing."""
 
     RAG_QDRANT_URL: str = "http://localhost:6333"
     """Qdrant server URL."""

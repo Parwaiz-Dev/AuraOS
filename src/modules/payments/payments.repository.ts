@@ -237,6 +237,50 @@ export class PaymentsRepository {
       pending_payments_today: parseInt(stats.pending_payments_today, 10) || 0,
     };
   }
+
+  async countByRestaurantId(
+    restaurantId: string,
+    statusFilter?: string,
+    methodFilter?: string,
+  ): Promise<number> {
+    const conditions = ['restaurant_id = $1'];
+    const params: any[] = [restaurantId];
+    if (statusFilter) { params.push(statusFilter); conditions.push(`status = $${params.length}`); }
+    if (methodFilter) { params.push(methodFilter); conditions.push(`method = $${params.length}`); }
+    const result = await query(
+      `SELECT COUNT(*)::int AS total FROM payments WHERE ${conditions.join(' AND ')}`,
+      params,
+    );
+    return result.rows[0].total;
+  }
+
+  async findByRestaurantIdFiltered(
+    restaurantId: string,
+    limit: number,
+    offset: number,
+    statusFilter?: string,
+    methodFilter?: string,
+  ): Promise<Payment[]> {
+    const conditions = ['p.restaurant_id = $1'];
+    const params: any[] = [restaurantId];
+    if (statusFilter) { params.push(statusFilter); conditions.push(`p.status = $${params.length}`); }
+    if (methodFilter) { params.push(methodFilter); conditions.push(`p.method = $${params.length}`); }
+    params.push(limit, offset);
+    const result = await query(
+      `SELECT
+         p.id, p.restaurant_id, p.order_id, p.amount, p.method, p.status,
+         p.reference_number, p.created_at, p.updated_at,
+         o.order_number, o.order_type, rt.table_number
+       FROM payments p
+       LEFT JOIN orders o ON o.id = p.order_id
+       LEFT JOIN restaurant_tables rt ON rt.id = o.table_id
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY p.created_at DESC
+       LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      params,
+    );
+    return result.rows;
+  }
 }
 
 export const paymentsRepository = new PaymentsRepository();

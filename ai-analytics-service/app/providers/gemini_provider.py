@@ -1,7 +1,8 @@
-"""Gemini 2.5 Pro provider for the AI Copilot."""
+"""Gemini LLM provider for the AI Copilot."""
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -15,14 +16,18 @@ logger = logging.getLogger(__name__)
 
 
 class GeminiProvider(LLMProvider):
-    """Google Gemini 2.5 Pro LLM provider."""
+    """Google Gemini LLM provider."""
 
     @property
     def name(self) -> str:
         return "gemini"
 
     async def generate(self, prompt: str, *, memory: "ConversationMemory | None" = None) -> str:
-        """Generate a response using the Gemini API."""
+        """Generate a response using the Gemini API.
+
+        The google-generativeai client is synchronous, so we run the blocking
+        call in a thread to avoid stalling the asyncio event loop.
+        """
         _ = memory  # reserved for future conversation context stitching
 
         api_key = settings.GEMINI_API_KEY
@@ -43,7 +48,8 @@ class GeminiProvider(LLMProvider):
                 },
             )
 
-            response = model.generate_content(prompt)
+            # Run synchronous Gemini call in a thread to avoid blocking the event loop
+            response = await asyncio.to_thread(model.generate_content, prompt)
             return response.text.strip()
 
         except ImportError:
@@ -61,7 +67,7 @@ class GeminiProvider(LLMProvider):
             import google.generativeai as genai
 
             genai.configure(api_key=settings.GEMINI_API_KEY)
-            _ = genai.list_models()
+            await asyncio.to_thread(genai.list_models)
             return True
         except Exception:
             logger.warning("Gemini health check failed", exc_info=True)

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { paymentsService } from './payments.service';
 import { CreatePaymentRequestSchema, UpdatePaymentRequestSchema } from './payments.types';
 import { successResponse } from '@/shared/utils/responseHandler';
+import { parsePagination, paginatedResponse } from '@/shared/utils/pagination';
 import { AuthenticatedRequest } from '@/shared/middleware/authenticate';
 import { eventBroadcaster } from '@/shared/socket/eventBroadcaster';
 
@@ -35,11 +36,14 @@ export class PaymentsController {
         throw new Error('User not associated with a restaurant');
       }
 
-      const limit = parseInt(req.query.limit as string) || 50;
-      const offset = parseInt(req.query.offset as string) || 0;
+      const pagination = parsePagination(req.query);
+      const statusFilter = req.query.status as string | undefined;
+      const method = req.query.method as string | undefined;
 
-      const payments = await paymentsService.getPayments(restaurantId, limit, offset);
-      res.status(200).json(successResponse(payments));
+      const { items, total } = await paymentsService.getPayments(
+        restaurantId, pagination.limit, pagination.offset, statusFilter, method,
+      );
+      res.status(200).json(successResponse(paginatedResponse(items, total, pagination)));
     } catch (error) {
       next(error);
     }

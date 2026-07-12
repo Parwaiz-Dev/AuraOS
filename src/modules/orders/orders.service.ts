@@ -171,8 +171,19 @@ export class OrdersService {
     return Array.from(grouped.values());
   }
 
-  async getOrders(restaurantId: string, limit: number = 50, offset: number = 0): Promise<Order[]> {
-    return ordersRepository.findByRestaurantId(restaurantId, limit, offset);
+  async getOrders(
+    restaurantId: string,
+    limit: number = 50,
+    offset: number = 0,
+    statusFilter?: string,
+    sortBy?: string,
+    sortOrder?: string,
+  ): Promise<{ items: any[]; total: number }> {
+    const [items, total] = await Promise.all([
+      ordersRepository.findByRestaurantIdFiltered(restaurantId, limit, offset, statusFilter, sortBy, sortOrder),
+      ordersRepository.countByRestaurantId(restaurantId, statusFilter),
+    ]);
+    return { items, total };
   }
 
   async updateOrder(orderId: string, restaurantId: string, payload: UpdateOrderRequest): Promise<Order> {
